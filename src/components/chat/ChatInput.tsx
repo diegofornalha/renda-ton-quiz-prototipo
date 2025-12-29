@@ -33,9 +33,9 @@ export const ChatInput = ({
     return (
       <Button
         onClick={onStartQuiz}
-        className="w-full h-12 rounded-xl font-semibold gap-2 bg-gradient-primary hover:opacity-90 transition-all"
+        className="w-full h-12 md:h-14 rounded-xl font-semibold gap-2 text-sm md:text-base bg-gradient-primary hover:opacity-90 transition-all"
       >
-        <Play className="w-5 h-5" />
+        <Play className="w-5 h-5 md:w-6 md:h-6" />
         Iniciar Quiz
       </Button>
     );
@@ -45,9 +45,9 @@ export const ChatInput = ({
     return (
       <Button
         onClick={onRestartQuiz}
-        className="w-full h-12 rounded-xl font-semibold gap-2 bg-gradient-primary hover:opacity-90 transition-all"
+        className="w-full h-12 md:h-14 rounded-xl font-semibold gap-2 text-sm md:text-base bg-gradient-primary hover:opacity-90 transition-all"
       >
-        <RotateCcw className="w-5 h-5" />
+        <RotateCcw className="w-5 h-5 md:w-6 md:h-6" />
         Fazer Novamente
       </Button>
     );
@@ -58,15 +58,15 @@ export const ChatInput = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex gap-2 md:gap-3">
       <Input
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Digite uma mensagem..."
-        className="flex-1 h-12 bg-background border-border"
+        className="flex-1 h-12 md:h-14 md:text-base bg-background border-border"
       />
-      <Button type="submit" size="icon" className="h-12 w-12 shrink-0">
-        <Send className="w-4 h-4" />
+      <Button type="submit" size="icon" className="h-12 w-12 md:h-14 md:w-14 shrink-0">
+        <Send className="w-4 h-4 md:w-5 md:h-5" />
       </Button>
     </form>
   );

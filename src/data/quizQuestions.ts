@@ -1,10 +1,6 @@
-export interface QuizQuestion {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-}
+import type { QuizQuestion, QuizLevel } from "@/types/quiz";
+
+export type { QuizQuestion, QuizLevel };
 
 export const quizQuestions: QuizQuestion[] = [
   {
@@ -128,15 +124,6 @@ export const quizQuestions: QuizQuestion[] = [
     explanation: "Embaixadores têm direito a comissões recorrentes sobre as vendas dos indicados e acesso a suporte prioritário, além de outras vantagens exclusivas!"
   }
 ];
-
-export interface QuizLevel {
-  name: string;
-  emoji: string;
-  minScore: number;
-  maxScore: number;
-  color: string;
-  description: string;
-}
 
 export const quizLevels: QuizLevel[] = [
   {

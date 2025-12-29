@@ -1,6 +1,7 @@
 import { Play, Clock, HelpCircle, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { quizLevels, quizQuestions } from "@/data/quizQuestions";
+import { ChatInterface } from "./ChatInterface";
 import tonHeroImage from "@/assets/ton-hero.png";
 
 interface QuizStartProps {
@@ -9,23 +10,26 @@ interface QuizStartProps {
 
 export const QuizStart = ({ onStart }: QuizStartProps) => {
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-6">
       {/* Hero Section */}
-      <div className="text-center space-y-6">
+      <div className="text-center space-y-4">
         <img
           src={tonHeroImage}
           alt="Ton Renda Extra"
-          className="w-64 h-auto mx-auto animate-bounce-in drop-shadow-xl"
+          className="w-48 h-auto mx-auto animate-bounce-in drop-shadow-xl"
         />
-        <div className="space-y-3">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-            Quiz: <span className="text-gradient">Renda Extra Ton</span>
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <span className="text-gradient">Renda Extra Ton</span>
           </h1>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            Avalie seu conhecimento sobre o programa e descubra seu nível!
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            Tire dúvidas no chat ou teste seus conhecimentos no quiz!
           </p>
         </div>
       </div>
+
+      {/* Chat Section */}
+      <ChatInterface />
 
       {/* Info Cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -70,9 +74,9 @@ export const QuizStart = ({ onStart }: QuizStartProps) => {
       <Button
         onClick={onStart}
         size="lg"
-        className="w-full h-16 rounded-2xl text-lg font-semibold gap-3 bg-gradient-primary hover:opacity-90 transition-all shadow-glow"
+        className="w-full h-14 rounded-2xl text-lg font-semibold gap-3 bg-gradient-primary hover:opacity-90 transition-all shadow-glow"
       >
-        <Play className="w-6 h-6" />
+        <Play className="w-5 h-5" />
         Iniciar Quiz
       </Button>
     </div>

@@ -1,4 +1,4 @@
-import { Quiz } from "@/components/Quiz";
+import { ChatQuiz } from "@/components/ChatQuiz";
 import { Helmet } from "react-helmet-async";
 
 const Index = () => {
@@ -11,7 +11,7 @@ const Index = () => {
           content="Avalie seu conhecimento sobre o programa Renda Extra Ton e descubra seu nível: Iniciante, Especialista ou Embaixador!"
         />
       </Helmet>
-      <Quiz />
+      <ChatQuiz />
     </>
   );
 };

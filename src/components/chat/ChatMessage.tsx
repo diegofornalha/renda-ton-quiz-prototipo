@@ -19,24 +19,24 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       className={`flex gap-2 ${isUser ? "justify-end" : "justify-start"} animate-fade-in`}
     >
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4 h-4 text-primary" />
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+          <Bot className="w-4 h-4 md:w-5 md:h-5 text-primary" />
         </div>
       )}
       <div
-        className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+        className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-3 md:px-5 md:py-4 ${
           isUser
             ? "bg-primary text-primary-foreground rounded-br-sm"
             : "bg-muted text-foreground rounded-bl-sm"
         }`}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-line">
+        <p className="text-sm md:text-base leading-relaxed whitespace-pre-line">
           {parseContent(message.content)}
         </p>
       </div>
       {isUser && (
-        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-          <User className="w-4 h-4 text-secondary-foreground" />
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+          <User className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground" />
         </div>
       )}
     </div>

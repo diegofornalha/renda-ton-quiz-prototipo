@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuiz } from "@/hooks/useQuiz";
 import { ChatHeader, ChatMessage, ChatInput, QuizOptions } from "@/components/chat";
-import tonHeroImage from "@/assets/ton-hero.png";
 
 export const ChatQuiz = () => {
   const {
@@ -28,22 +27,10 @@ export const ChatQuiz = () => {
   }, [messages]);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-gradient-hero py-4 px-3 sm:py-6 sm:px-4 md:py-8 lg:py-10">
-      <div className="max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto space-y-3 sm:space-y-4">
-        {/* Header */}
-        <header className="text-center space-y-1 md:space-y-2">
-          <img
-            src={tonHeroImage}
-            alt="Ton Renda Extra"
-            className="w-16 sm:w-24 md:w-28 lg:w-32 h-auto mx-auto drop-shadow-lg"
-          />
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">
-            <span className="text-gradient">Renda Extra Ton</span>
-          </h1>
-        </header>
-
+    <div className="h-screen h-[100dvh] bg-gradient-hero p-2 sm:p-3 md:p-4">
+      <div className="h-full max-w-4xl mx-auto">
         {/* Chat Container */}
-        <main className="flex flex-col h-[calc(100vh-140px)] h-[calc(100dvh-140px)] sm:h-[calc(100vh-180px)] md:h-[calc(100vh-200px)] lg:h-[calc(100vh-220px)] min-h-[400px] md:min-h-[500px] bg-card rounded-2xl md:rounded-3xl border border-border shadow-card overflow-hidden">
+        <main className="flex flex-col h-full bg-card rounded-2xl md:rounded-3xl border border-border shadow-card overflow-hidden">
           <ChatHeader
             currentQuestion={currentQuestion}
             totalQuestions={totalQuestions}

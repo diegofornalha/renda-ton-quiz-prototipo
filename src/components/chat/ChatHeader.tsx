@@ -1,4 +1,11 @@
 import { Bot, Clock, MoreVertical } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ChatHeaderProps {
   currentQuestion: number;
@@ -21,6 +28,7 @@ export const ChatHeader = ({
   timeLeft = 0,
   timerEnabled = true
 }: ChatHeaderProps) => {
+  const navigate = useNavigate();
   const isLowTime = timerEnabled && timeLeft <= 30;
   const isCriticalTime = timerEnabled && timeLeft <= 10;
 
@@ -60,9 +68,21 @@ export const ChatHeader = ({
             </div>
           )}
           
-          <button className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-border z-50">
+              <DropdownMenuItem onClick={() => navigate("/admin")}>
+                Admin
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/gabarito")}>
+                Gabarito
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

@@ -1,1 +1,10 @@
 project_id = "uobqtfcqfcfmllgblsrs"
+
+[functions.verify-admin]
+verify_jwt = false
+
+[functions.get-admin-data]
+verify_jwt = false
+
+[functions.update-admin-settings]
+verify_jwt = false

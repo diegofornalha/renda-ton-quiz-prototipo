@@ -51,8 +51,8 @@ export const useQuiz = () => {
   // Difficulty settings
   const [difficultyOrderEnabled, setDifficultyOrderEnabled] = useState(true);
   const [showDifficultyEnabled, setShowDifficultyEnabled] = useState(true);
-  const [questionsEasy, setQuestionsEasy] = useState(3);
-  const [questionsMedium, setQuestionsMedium] = useState(4);
+  const [questionsEasy, setQuestionsEasy] = useState(2);
+  const [questionsMedium, setQuestionsMedium] = useState(5);
   const [questionsHard, setQuestionsHard] = useState(3);
 
   const totalQuestions = 10; // Fixed number of questions per quiz

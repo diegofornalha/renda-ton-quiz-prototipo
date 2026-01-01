@@ -6,7 +6,8 @@ const createWelcomeMessage = (): ChatMessage => ({
   id: "welcome",
   role: "assistant",
   content: "Olá! 👋 Sou o assistente do Renda Extra Ton. Vou te fazer algumas perguntas para testar seus conhecimentos sobre o programa. Pronto para começar?",
-  type: "text",
+  type: "welcome",
+  options: ["Sim ✅", "Não, quero ler o regulamento 📖"],
   isTyping: true,
 });
 
@@ -434,7 +435,8 @@ export const useQuiz = () => {
         id: "restart",
         role: "assistant",
         content: "Vamos tentar novamente! 🚀 Pronto para um novo quiz?",
-        type: "text",
+        type: "welcome",
+        options: ["Sim ✅", "Não, quero ler o regulamento 📖"],
       },
     ]);
     setQuizState("idle");
@@ -449,19 +451,59 @@ export const useQuiz = () => {
     isProcessingRef.current = false;
   }, [totalQuestions, questionTimeLimit]);
 
-  // Start quiz by asking for email in chat
+  // Handle welcome options (Sim/Não)
+  const handleWelcomeOptionClick = useCallback((optionIndex: number) => {
+    if (optionIndex === 0) {
+      // Sim - proceed to ask for email
+      addMessage({
+        id: `welcome-response-${Date.now()}`,
+        role: "user",
+        content: "Sim ✅",
+        type: "text",
+      });
+      
+      setAwaitingEmail(true);
+      
+      addMessageWithTyping({
+        id: "ask-email",
+        role: "assistant",
+        content: "Ótimo! Antes de começarmos, preciso do seu email para registrar sua participação. 📧",
+        type: "text",
+      });
+    } else {
+      // Não - show regulation link and ask again
+      addMessage({
+        id: `welcome-response-${Date.now()}`,
+        role: "user",
+        content: "Não, quero ler o regulamento 📖",
+        type: "text",
+      });
+      
+      addMessageWithTyping({
+        id: `regulation-link-${Date.now()}`,
+        role: "assistant",
+        content: "Sem problemas! 📚 Você pode ler o regulamento completo aqui: [Regulamento Renda Extra](/regulamento)",
+        type: "text",
+      }, 1000);
+      
+      // After showing link, ask again
+      setTimeout(() => {
+        addMessageWithTyping({
+          id: `ask-again-${Date.now()}`,
+          role: "assistant",
+          content: "Quando estiver pronto, é só me avisar! Pronto para começar?",
+          type: "welcome",
+          options: ["Sim ✅", "Não, quero ler o regulamento 📖"],
+        }, 1000);
+      }, 3500);
+    }
+  }, [addMessage, addMessageWithTyping]);
+
+  // Start quiz by asking for email in chat (kept for compatibility)
   const startQuiz = useCallback(() => {
     if (questions.length === 0) return;
-    
-    setAwaitingEmail(true);
-    
-    addMessageWithTyping({
-      id: "ask-email",
-      role: "assistant",
-      content: "Ótimo! Antes de começarmos, preciso do seu email para registrar sua participação. 📧",
-      type: "text",
-    });
-  }, [questions.length, addMessageWithTyping]);
+    handleWelcomeOptionClick(0);
+  }, [questions.length, handleWelcomeOptionClick]);
 
   const sendMessage = useCallback(
     (text: string) => {
@@ -513,7 +555,7 @@ export const useQuiz = () => {
           role: "assistant",
           content:
             quizState === "idle"
-              ? "Clique em 'Iniciar Quiz' para começarmos! 🎯"
+              ? "Use os botões acima para começar! 🎯"
               : "Continue respondendo as perguntas do quiz! 📝",
           type: "text",
         });
@@ -524,6 +566,7 @@ export const useQuiz = () => {
 
   const lastMessage = messages[messages.length - 1];
   const showOptions = lastMessage?.type === "question" && quizState === "playing" && !isProcessingRef.current;
+  const showWelcomeOptions = lastMessage?.type === "welcome" && lastMessage?.options && quizState === "idle" && !awaitingEmail && !lastMessage.isTyping && !lastMessage.isStreaming;
 
   return {
     messages,
@@ -531,6 +574,7 @@ export const useQuiz = () => {
     currentQuestion,
     totalQuestions,
     showOptions,
+    showWelcomeOptions,
     lastMessage,
     isLoading,
     awaitingEmail,
@@ -541,6 +585,7 @@ export const useQuiz = () => {
     startQuiz,
     startQuizWithEmail,
     handleOptionClick,
+    handleWelcomeOptionClick,
     restartQuiz,
     sendMessage,
   };

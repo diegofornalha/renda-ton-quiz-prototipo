@@ -10,6 +10,7 @@ export const ChatQuiz = () => {
     currentQuestion,
     totalQuestions,
     showOptions,
+    showWelcomeOptions,
     lastMessage,
     isLoading,
     awaitingEmail,
@@ -17,6 +18,7 @@ export const ChatQuiz = () => {
     timerEnabled,
     startQuiz,
     handleOptionClick,
+    handleWelcomeOptionClick,
     restartQuiz,
     sendMessage,
   } = useQuiz();
@@ -57,6 +59,13 @@ export const ChatQuiz = () => {
               <QuizOptions
                 options={lastMessage.options}
                 onSelect={handleOptionClick}
+              />
+            )}
+
+            {showWelcomeOptions && lastMessage?.options && (
+              <QuizOptions
+                options={lastMessage.options}
+                onSelect={handleWelcomeOptionClick}
               />
             )}
 

@@ -11,6 +11,7 @@ export const ChatQuiz = () => {
     totalQuestions,
     showOptions,
     lastMessage,
+    isLoading,
     startQuiz,
     handleOptionClick,
     restartQuiz,
@@ -58,6 +59,7 @@ export const ChatQuiz = () => {
             <ChatInput
               quizState={quizState}
               showOptions={showOptions}
+              isLoading={isLoading}
               onStartQuiz={startQuiz}
               onRestartQuiz={restartQuiz}
               onSendMessage={sendMessage}

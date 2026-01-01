@@ -7,6 +7,7 @@ import type { QuizState } from "@/types/quiz";
 interface ChatInputProps {
   quizState: QuizState;
   showOptions: boolean;
+  isLoading?: boolean;
   onStartQuiz: () => void;
   onRestartQuiz: () => void;
   onSendMessage: (text: string) => void;
@@ -15,6 +16,7 @@ interface ChatInputProps {
 export const ChatInput = ({
   quizState,
   showOptions,
+  isLoading = false,
   onStartQuiz,
   onRestartQuiz,
   onSendMessage,
@@ -33,10 +35,11 @@ export const ChatInput = ({
     return (
       <Button
         onClick={onStartQuiz}
-        className="w-full h-12 md:h-14 rounded-xl font-semibold gap-2 text-sm md:text-base bg-gradient-primary hover:opacity-90 transition-all"
+        disabled={isLoading}
+        className="w-full h-12 md:h-14 rounded-xl font-semibold gap-2 text-sm md:text-base bg-gradient-primary hover:opacity-90 transition-all disabled:opacity-50"
       >
         <Play className="w-5 h-5 md:w-6 md:h-6" />
-        Iniciar Quiz
+        {isLoading ? "Carregando..." : "Iniciar Quiz"}
       </Button>
     );
   }

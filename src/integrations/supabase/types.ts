@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      quiz_levels: {
+        Row: {
+          color: string
+          description: string
+          emoji: string
+          id: string
+          max_score: number
+          min_score: number
+          name: string
+        }
+        Insert: {
+          color: string
+          description: string
+          emoji: string
+          id?: string
+          max_score: number
+          min_score: number
+          name: string
+        }
+        Update: {
+          color?: string
+          description?: string
+          emoji?: string
+          id?: string
+          max_score?: number
+          min_score?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          alternativas: Json
+          created_at: string
+          dificuldade: string
+          id: string
+          numero: number
+          regulamento_ref: string | null
+          texto: string
+          topico: string
+        }
+        Insert: {
+          alternativas: Json
+          created_at?: string
+          dificuldade?: string
+          id?: string
+          numero: number
+          regulamento_ref?: string | null
+          texto: string
+          topico: string
+        }
+        Update: {
+          alternativas?: Json
+          created_at?: string
+          dificuldade?: string
+          id?: string
+          numero?: number
+          regulamento_ref?: string | null
+          texto?: string
+          topico?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

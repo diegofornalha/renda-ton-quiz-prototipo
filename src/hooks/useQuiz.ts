@@ -32,6 +32,7 @@ export const useQuiz = () => {
   const [answers, setAnswers] = useState<(boolean | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   
   // Timer states
   const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME_LIMIT);
@@ -133,7 +134,7 @@ export const useQuiz = () => {
     return keys.findIndex((key) => alternativas[key].correta);
   };
 
-  const finishQuiz = useCallback((finalScoreValue: number, startTime: number) => {
+  const finishQuiz = useCallback(async (finalScoreValue: number, startTime: number, email: string) => {
     const endTime = Date.now();
     const durationSeconds = Math.round((endTime - startTime) / 1000);
     setTotalDuration(durationSeconds);
@@ -142,6 +143,18 @@ export const useQuiz = () => {
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
+    }
+
+    // Save result to database
+    try {
+      await supabase.from("quiz_results").insert({
+        email,
+        score: finalScoreValue,
+        total_questions: totalQuestions,
+        duration_seconds: durationSeconds,
+      });
+    } catch (error) {
+      console.error("Error saving result:", error);
     }
 
     const level = levels.find(
@@ -158,10 +171,6 @@ export const useQuiz = () => {
       content: `🎉 **Quiz Finalizado!**\n\nVocê acertou **${finalScoreValue}** de **${totalQuestions}** perguntas!\n\n⏱️ **Tempo total:** ${timeStr}\n\n${level?.emoji || "🏆"} **Nível: ${level?.name || "Especialista"}**\n\n${level?.description || "Parabéns pelo seu desempenho!"}`,
       type: "result",
     });
-
-    setTimeout(() => {
-      setShowEmailModal(true);
-    }, 1000);
   }, [levels, addMessage, totalQuestions]);
 
   const processAnswer = useCallback((optionIndex: number | null, isTimeout: boolean = false) => {
@@ -245,7 +254,7 @@ export const useQuiz = () => {
           
           isProcessingRef.current = false;
         } else {
-          finishQuiz(newScore, quizStartTime!);
+          finishQuiz(newScore, quizStartTime!, userEmail!);
           isProcessingRef.current = false;
         }
       }, 800);
@@ -256,8 +265,16 @@ export const useQuiz = () => {
     processAnswer(null, true);
   }, [processAnswer]);
 
-  const startQuiz = useCallback(() => {
+  const requestEmailForQuiz = useCallback(() => {
     if (questions.length === 0) return;
+    setShowEmailModal(true);
+  }, [questions.length]);
+
+  const startQuizWithEmail = useCallback((email: string) => {
+    if (questions.length === 0) return;
+
+    setUserEmail(email);
+    setShowEmailModal(false);
 
     const shuffledQuestions = shuffleArray(questions).slice(0, totalQuestions);
     setQuestions(shuffledQuestions);
@@ -280,7 +297,7 @@ export const useQuiz = () => {
       questionIndex: 0,
       options,
     });
-  }, [addMessage, questions]);
+  }, [addMessage, questions, totalQuestions]);
 
   const handleOptionClick = useCallback(
     (optionIndex: number) => {
@@ -322,8 +339,9 @@ export const useQuiz = () => {
     setQuestionTimeLeft(QUESTION_TIME_LIMIT);
     setQuizStartTime(null);
     setTotalDuration(0);
+    setUserEmail(null);
     isProcessingRef.current = false;
-  }, []);
+  }, [totalQuestions]);
 
   const sendMessage = useCallback(
     (text: string) => {
@@ -358,6 +376,8 @@ export const useQuiz = () => {
     setShowEmailModal(false);
   }, []);
 
+  const startQuiz = requestEmailForQuiz;
+
   return {
     messages,
     quizState,
@@ -371,6 +391,7 @@ export const useQuiz = () => {
     questionTimeLeft,
     totalDuration,
     startQuiz,
+    startQuizWithEmail,
     handleOptionClick,
     restartQuiz,
     sendMessage,

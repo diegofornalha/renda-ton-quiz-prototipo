@@ -14,25 +14,11 @@ import { toast } from "sonner";
 
 interface EmailModalProps {
   isOpen: boolean;
-  score: number;
-  totalQuestions: number;
-  durationSeconds: number;
-  onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (email: string) => void;
 }
-
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}min ${secs}s`;
-};
 
 export const EmailModal = ({
   isOpen,
-  score,
-  totalQuestions,
-  durationSeconds,
-  onClose,
   onSuccess,
 }: EmailModalProps) => {
   const [email, setEmail] = useState("");
@@ -47,35 +33,19 @@ export const EmailModal = ({
     }
 
     setIsSubmitting(true);
-    try {
-      const { error } = await supabase.from("quiz_results").insert({
-        email: email.trim(),
-        score,
-        total_questions: totalQuestions,
-        duration_seconds: durationSeconds,
-      });
-
-      if (error) throw error;
-
-      toast.success("Resultado registrado com sucesso!");
-      setEmail("");
-      onSuccess();
-    } catch (error) {
-      console.error("Error saving result:", error);
-      toast.error("Erro ao salvar resultado. Tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Small delay to show loading state
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setIsSubmitting(false);
+    onSuccess(email.trim());
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Registre seu resultado! 🎉</DialogTitle>
+          <DialogTitle>Antes de começar! 📧</DialogTitle>
           <DialogDescription>
-            Você acertou <strong>{score}</strong> de <strong>{totalQuestions}</strong> perguntas em <strong>{formatDuration(durationSeconds)}</strong>.
-            Deixe seu email para registrar sua pontuação.
+            Insira seu email para registrar sua participação no quiz.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,12 +61,9 @@ export const EmailModal = ({
               autoFocus
             />
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Pular
-            </Button>
+          <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Registrar"}
+              {isSubmitting ? "Confirmando..." : "Iniciar Quiz"}
             </Button>
           </div>
         </form>

@@ -238,6 +238,9 @@ const Admin = () => {
                   disabled={isAuthenticating}
                   autoFocus
                 />
+                <p className="text-xs text-muted-foreground">
+                  💡 Senha do primeiro acesso: <span className="font-mono font-semibold text-primary">123456</span>
+                </p>
               </div>
               {authError && (
                 <p className="text-sm text-destructive">{authError}</p>

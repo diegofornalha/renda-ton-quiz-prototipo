@@ -78,9 +78,6 @@ export const ChatHeader = ({
               <DropdownMenuItem onClick={() => navigate("/admin")}>
                 Admin
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/gabarito")}>
-                Gabarito
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

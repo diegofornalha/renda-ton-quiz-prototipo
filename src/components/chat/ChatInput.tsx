@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Settings, Smile, Paperclip, Mic, Mail } from "lucide-react";
+import { Send, Settings, Smile, Paperclip, Mic, Mail, X } from "lucide-react";
 import type { QuizState } from "@/types/quiz";
 
 interface ChatInputProps {
@@ -26,6 +26,13 @@ export const ChatInput = ({
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const navigate = useNavigate();
+
+  // Pre-fill email for prototype testing
+  useEffect(() => {
+    if (awaitingEmail) {
+      setInput("prototipo@ton.com.br");
+    }
+  }, [awaitingEmail]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +62,15 @@ export const ChatInput = ({
             autoFocus
             maxLength={254}
           />
+          {input && (
+            <button
+              type="button"
+              onClick={() => setInput("")}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         
         <Button 

@@ -168,9 +168,9 @@ const Participantes = () => {
                       onClick={() => handleParticipantClick(participant)}
                     >
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                           <div className="space-y-2 min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Mail className="w-4 h-4 text-primary shrink-0" />
                               <span className="font-medium truncate">
                                 {participant.email}
@@ -198,7 +198,7 @@ const Participantes = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 shrink-0">
                             <div className="flex items-center gap-1">
                               <Trophy className="w-4 h-4 text-accent" />
                               <span className="text-sm font-medium">{participant.bestScore}/10</span>

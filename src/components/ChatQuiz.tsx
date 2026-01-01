@@ -14,14 +14,12 @@ export const ChatQuiz = () => {
     lastMessage,
     isLoading,
     showEmailModal,
-    finalScore,
     questionTimeLeft,
-    totalDuration,
     startQuiz,
+    startQuizWithEmail,
     handleOptionClick,
     restartQuiz,
     sendMessage,
-    closeEmailModal,
   } = useQuiz();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,11 +75,7 @@ export const ChatQuiz = () => {
 
       <EmailModal
         isOpen={showEmailModal}
-        score={finalScore}
-        totalQuestions={totalQuestions}
-        durationSeconds={totalDuration}
-        onClose={closeEmailModal}
-        onSuccess={closeEmailModal}
+        onSuccess={startQuizWithEmail}
       />
     </div>
   );

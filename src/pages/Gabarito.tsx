@@ -148,31 +148,6 @@ const Gabarito = () => {
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={selectedTopic === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedTopic(null)}
-              >
-                Todos ({questions.length})
-              </Button>
-              {topics.slice(0, 8).map((topic) => (
-                <Button
-                  key={topic}
-                  variant={selectedTopic === topic ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedTopic(topic)}
-                  className="text-xs"
-                >
-                  {topic.length > 25 ? topic.slice(0, 25) + "..." : topic}
-                </Button>
-              ))}
-              {topics.length > 8 && (
-                <Badge variant="secondary" className="self-center">
-                  +{topics.length - 8} tópicos
-                </Badge>
-              )}
-            </div>
           </CardContent>
         </Card>
 

@@ -41,6 +41,7 @@ export interface ChatMessage {
   questionIndex?: number;
   options?: string[];
   isCorrect?: boolean;
+  difficulty?: "fácil" | "média" | "difícil";
 }
 
 export type QuizState = "idle" | "playing" | "finished";

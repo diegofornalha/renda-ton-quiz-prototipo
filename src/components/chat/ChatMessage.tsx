@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface ChatMessageProps {
   message: ChatMessageType;
+  onStreamingComplete?: () => void;
 }
 
 const parseBold = (text: string, startKey: number): React.ReactNode[] => {
@@ -65,16 +66,33 @@ const getDifficultyBadge = (difficulty: string) => {
   return config[difficulty.toLowerCase()] || null;
 };
 
-export const ChatMessage = ({ message }: ChatMessageProps) => {
+// Helper to split question header from body
+const splitQuestionContent = (content: string): [string | null, string] => {
+  const match = content.match(/^(\*\*Pergunta \d+\/\d+\*\*)\n\n(.+)$/s);
+  if (match) {
+    return [match[1], match[2]];
+  }
+  return [null, content];
+};
+
+export const ChatMessage = ({ message, onStreamingComplete }: ChatMessageProps) => {
   const isUser = message.role === "user";
   const difficultyConfig = message.difficulty ? getDifficultyBadge(message.difficulty) : null;
+  const isQuestionMessage = message.type === "question";
   
-  const [displayedText, setDisplayedText] = useState(message.isStreaming ? "" : message.content);
+  // Split question content into header (fixed) and body (streaming)
+  const [questionHeader, questionBody] = isQuestionMessage 
+    ? splitQuestionContent(message.content)
+    : [null, message.content];
+  
+  const contentToStream = isQuestionMessage ? questionBody : message.content;
+  
+  const [displayedText, setDisplayedText] = useState(message.isStreaming ? "" : contentToStream);
   const [isStreamingComplete, setIsStreamingComplete] = useState(!message.isStreaming);
 
   useEffect(() => {
     if (!message.isStreaming) {
-      setDisplayedText(message.content);
+      setDisplayedText(contentToStream);
       setIsStreamingComplete(true);
       return;
     }
@@ -84,17 +102,18 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
     let currentIndex = 0;
 
     const interval = setInterval(() => {
-      if (currentIndex < message.content.length) {
-        setDisplayedText(message.content.slice(0, currentIndex + 1));
+      if (currentIndex < contentToStream.length) {
+        setDisplayedText(contentToStream.slice(0, currentIndex + 1));
         currentIndex++;
       } else {
         setIsStreamingComplete(true);
+        onStreamingComplete?.();
         clearInterval(interval);
       }
     }, 25);
 
     return () => clearInterval(interval);
-  }, [message.content, message.isStreaming]);
+  }, [contentToStream, message.isStreaming, onStreamingComplete]);
 
   return (
     <div
@@ -128,6 +147,14 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
           </Badge>
         )}
         
+        {/* Question header (fixed, no streaming) */}
+        {isQuestionMessage && questionHeader && (
+          <p className="text-sm leading-relaxed whitespace-pre-line mb-2">
+            {parseContent(questionHeader)}
+          </p>
+        )}
+        
+        {/* Message body (with streaming for questions) */}
         <p className="text-sm leading-relaxed whitespace-pre-line">
           {parseContent(displayedText)}
           {!isStreamingComplete && <span className="inline-block w-0.5 h-4 bg-foreground/70 ml-0.5 animate-pulse" />}

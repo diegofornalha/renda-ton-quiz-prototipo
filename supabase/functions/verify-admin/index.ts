@@ -15,12 +15,57 @@ function getCorsHeaders(origin: string | null) {
   };
 }
 
+// Simple in-memory rate limiting (per isolate)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 300000; // 5 minutes
+const MAX_ATTEMPTS = 5;
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return { allowed: true };
+  }
+  
+  if (record.count >= MAX_ATTEMPTS) {
+    const retryAfter = Math.ceil((record.resetTime - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  
+  record.count++;
+  return { allowed: true };
+}
+
 serve(async (req) => {
   const origin = req.headers.get("Origin");
   const corsHeaders = getCorsHeaders(origin);
 
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const rateCheck = checkRateLimit(clientIp);
+  
+  if (!rateCheck.allowed) {
+    console.log(`Rate limit exceeded for IP: ${clientIp}`);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: `Muitas tentativas. Tente novamente em ${Math.ceil(rateCheck.retryAfter! / 60)} minutos.` 
+      }),
+      { 
+        status: 429, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Retry-After": String(rateCheck.retryAfter)
+        } 
+      }
+    );
   }
 
   try {
@@ -68,6 +113,9 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {
+      // Add delay after failed attempt to slow down brute force
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log(`Failed login attempt from IP: ${clientIp}`);
       return new Response(
         JSON.stringify({ success: false, error: "Senha incorreta" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }

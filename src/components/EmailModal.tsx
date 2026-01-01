@@ -24,10 +24,16 @@ export const EmailModal = ({
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // RFC 5322 compliant email regex with length validation
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim() || !email.includes("@")) {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    // Proper email validation: regex + max length (RFC 5321)
+    if (!emailRegex.test(trimmedEmail) || trimmedEmail.length > 254) {
       toast.error("Por favor, insira um email válido");
       return;
     }
@@ -36,7 +42,7 @@ export const EmailModal = ({
     // Small delay to show loading state
     await new Promise(resolve => setTimeout(resolve, 300));
     setIsSubmitting(false);
-    onSuccess(email.trim());
+    onSuccess(trimmedEmail);
   };
 
   return (
@@ -59,6 +65,8 @@ export const EmailModal = ({
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
               autoFocus
+              maxLength={254}
+              pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
             />
           </div>
           <div className="flex justify-end">

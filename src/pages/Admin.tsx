@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail } from "lucide-react";
+import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,6 +15,7 @@ interface QuizResult {
   score: number;
   total_questions: number;
   completed_at: string;
+  duration_seconds: number | null;
 }
 
 interface ScoreGroup {
@@ -22,6 +23,13 @@ interface ScoreGroup {
   count: number;
   results: QuizResult[];
 }
+
+const formatDuration = (seconds: number | null): string => {
+  if (!seconds) return "-";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}min ${secs}s`;
+};
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -231,22 +239,28 @@ const Admin = () => {
                       <Card key={result.id} className="bg-muted/50">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-1 min-w-0">
+                            <div className="space-y-2 min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-primary shrink-0" />
                                 <span className="font-medium truncate">
                                   {result.email}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="w-4 h-4 shrink-0" />
-                                <span>
-                                  {format(
-                                    new Date(result.completed_at),
-                                    "dd 'de' MMMM 'de' yyyy 'às' HH:mm",
-                                    { locale: ptBR }
-                                  )}
-                                </span>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                                  <span>
+                                    {format(
+                                      new Date(result.completed_at),
+                                      "dd/MM/yyyy 'às' HH:mm",
+                                      { locale: ptBR }
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{formatDuration(result.duration_seconds)}</span>
+                                </div>
                               </div>
                             </div>
                             <Badge variant="outline" className="shrink-0">

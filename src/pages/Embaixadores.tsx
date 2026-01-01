@@ -209,7 +209,7 @@ const Embaixadores = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge className="shrink-0 bg-accent text-accent-foreground">
                               10/10 🏆
                             </Badge>
@@ -218,7 +218,7 @@ const Embaixadores = () => {
                                 e.stopPropagation();
                                 handleDeleteResult(participant.latestResult.id);
                               }}
-                              className="text-xs text-red-500 hover:text-red-700 font-medium"
+                              className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0"
                             >
                               excluir
                             </button>

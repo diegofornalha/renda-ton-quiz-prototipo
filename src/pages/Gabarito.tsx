@@ -127,10 +127,16 @@ const Gabarito = () => {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
               <BookOpen className="w-7 h-7 text-primary" />
-              Perguntas e Respostas Geradas com IA através do regulamento
+              Perguntas e Respostas
             </h1>
             <p className="text-muted-foreground">
-              {questions.length} perguntas com respostas e explicações
+              {questions.length} perguntas com respostas e explicações geradas com IA através do{" "}
+              <button
+                onClick={() => navigate("/regulamento")}
+                className="text-primary hover:underline font-medium"
+              >
+                regulamento
+              </button>
             </p>
           </div>
         </div>

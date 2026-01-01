@@ -44,6 +44,7 @@ export interface ChatMessage {
   difficulty?: "fácil" | "média" | "difícil";
   isTyping?: boolean;
   isStreaming?: boolean;
+  videoUrl?: string;
 }
 
 export type QuizState = "idle" | "playing" | "finished";

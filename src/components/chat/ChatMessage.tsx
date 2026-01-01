@@ -164,6 +164,22 @@ export const ChatMessage = ({ message, onStreamingComplete, onStreamingProgress 
           {parseContent(displayedText)}
         </p>
         
+        {/* YouTube video embed */}
+        {message.videoUrl && isStreamingComplete && (
+          <div className="mt-3 rounded-lg overflow-hidden">
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+                src={message.videoUrl}
+                title="YouTube video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
+        
         {/* Timestamp placeholder */}
         {isStreamingComplete && (
           <div className={`text-[10px] mt-0.5 text-right ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>

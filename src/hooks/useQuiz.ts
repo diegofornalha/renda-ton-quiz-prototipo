@@ -9,6 +9,7 @@ const createWelcomeMessage = (): ChatMessage => ({
   type: "welcome",
   options: ["Sim ✅", "Não, quero ler o regulamento 📖"],
   isTyping: true,
+  videoUrl: "https://www.youtube.com/embed/YKko7n7t6TQ?si=qiheFWA5NLa41KB0",
 });
 
 // Shuffle array using Fisher-Yates algorithm

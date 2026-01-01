@@ -24,10 +24,12 @@ export const useQuiz = () => {
   const [quizState, setQuizState] = useState<QuizState>("idle");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
+  const [finalScore, setFinalScore] = useState(0);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [levels, setLevels] = useState<QuizLevel[]>([]);
   const [answers, setAnswers] = useState<(boolean | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const totalQuestions = 10; // Fixed number of questions per quiz
 
@@ -165,17 +167,22 @@ export const useQuiz = () => {
           } else {
             // Finish quiz
             setQuizState("finished");
-            const finalScore = newScore;
+            setFinalScore(newScore);
             const level = levels.find(
-              (l) => finalScore >= l.min_score && finalScore <= l.max_score
+              (l) => newScore >= l.min_score && newScore <= l.max_score
             ) || levels[0];
 
             addMessage({
               id: "result",
               role: "assistant",
-              content: `🎉 **Quiz Finalizado!**\n\nVocê acertou **${finalScore}** de **${totalQuestions}** perguntas!\n\n${level?.emoji || "🏆"} **Nível: ${level?.name || "Especialista"}**\n\n${level?.description || "Parabéns pelo seu desempenho!"}`,
+              content: `🎉 **Quiz Finalizado!**\n\nVocê acertou **${newScore}** de **${totalQuestions}** perguntas!\n\n${level?.emoji || "🏆"} **Nível: ${level?.name || "Especialista"}**\n\n${level?.description || "Parabéns pelo seu desempenho!"}`,
               type: "result",
             });
+
+            // Show email modal after a short delay
+            setTimeout(() => {
+              setShowEmailModal(true);
+            }, 1000);
           }
         }, 800);
       }, 500);
@@ -241,6 +248,10 @@ export const useQuiz = () => {
   const lastMessage = messages[messages.length - 1];
   const showOptions = lastMessage?.type === "question" && quizState === "playing";
 
+  const closeEmailModal = useCallback(() => {
+    setShowEmailModal(false);
+  }, []);
+
   return {
     messages,
     quizState,
@@ -249,9 +260,12 @@ export const useQuiz = () => {
     showOptions,
     lastMessage,
     isLoading,
+    showEmailModal,
+    finalScore,
     startQuiz,
     handleOptionClick,
     restartQuiz,
     sendMessage,
+    closeEmailModal,
   };
 };

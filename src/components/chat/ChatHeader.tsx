@@ -33,7 +33,7 @@ export const ChatHeader = ({
   const isCriticalTime = timerEnabled && timeLeft <= 10;
 
   return (
-    <div className="bg-gradient-header px-3 py-2 safe-area-inset-top">
+    <div className="bg-gradient-header px-3 py-2 safe-area-inset-top sticky top-0 z-50">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}

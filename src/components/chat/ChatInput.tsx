@@ -51,7 +51,7 @@ export const ChatInput = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Digite seu email..."
-            className="flex-1 h-auto bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 p-0"
+            className="flex-1 h-auto bg-transparent border-none text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-0 p-0"
             autoFocus
             maxLength={254}
           />
@@ -98,7 +98,7 @@ export const ChatInput = ({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Mensagem"
-          className="flex-1 h-auto bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 p-0"
+          className="flex-1 h-auto bg-transparent border-none text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-0 p-0"
         />
         <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
           <Paperclip className="w-5 h-5" />

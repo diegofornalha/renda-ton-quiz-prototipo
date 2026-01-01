@@ -1,16 +1,34 @@
+export interface QuizAlternative {
+  texto: string;
+  correta: boolean;
+  explicacao: string;
+  regulamento_ref: string;
+}
+
+export interface QuizAlternatives {
+  A: QuizAlternative;
+  B: QuizAlternative;
+  C: QuizAlternative;
+  D: QuizAlternative;
+}
+
 export interface QuizQuestion {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
+  id: string;
+  numero: number;
+  texto: string;
+  alternativas: QuizAlternatives;
+  dificuldade: string;
+  topico: string;
+  regulamento_ref?: string;
+  created_at: string;
 }
 
 export interface QuizLevel {
+  id: string;
   name: string;
   emoji: string;
-  minScore: number;
-  maxScore: number;
+  min_score: number;
+  max_score: number;
   color: string;
   description: string;
 }

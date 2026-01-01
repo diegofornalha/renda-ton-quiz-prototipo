@@ -42,6 +42,18 @@ const Admin = () => {
   const [timerSeconds, setTimerSeconds] = useState(180);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+  // Difficulty settings
+  const [difficultyOrderEnabled, setDifficultyOrderEnabled] = useState(true);
+  const [showDifficultyEnabled, setShowDifficultyEnabled] = useState(true);
+  const [questionsEasy, setQuestionsEasy] = useState(3);
+  const [questionsMedium, setQuestionsMedium] = useState(4);
+  const [questionsHard, setQuestionsHard] = useState(3);
+
+  // Available questions count by difficulty
+  const [availableEasy, setAvailableEasy] = useState(0);
+  const [availableMedium, setAvailableMedium] = useState(0);
+  const [availableHard, setAvailableHard] = useState(0);
+
   // Group results by email, considering only the latest participation for classification
   const groupResultsByEmail = useCallback((allResults: QuizResult[]): ParticipantSummary[] => {
     const emailMap = new Map<string, QuizResult[]>();
@@ -107,13 +119,20 @@ const Admin = () => {
     setIsLoading(true);
     try {
       const [questionsRes, resultsRes, settingsRes] = await Promise.all([
-        supabase.from("quiz_questions").select("id", { count: "exact" }),
+        supabase.from("quiz_questions").select("*"),
         supabase.from("quiz_results").select("*").order("completed_at", { ascending: false }),
         supabase.from("quiz_settings").select("*"),
       ]);
 
-      if (questionsRes.count !== null) {
-        setQuestionsCount(questionsRes.count);
+      if (questionsRes.data) {
+        setQuestionsCount(questionsRes.data.length);
+        // Count questions by difficulty
+        const easy = questionsRes.data.filter((q: { dificuldade: string }) => q.dificuldade.toLowerCase() === 'fácil').length;
+        const medium = questionsRes.data.filter((q: { dificuldade: string }) => q.dificuldade.toLowerCase() === 'média').length;
+        const hard = questionsRes.data.filter((q: { dificuldade: string }) => q.dificuldade.toLowerCase() === 'difícil').length;
+        setAvailableEasy(easy);
+        setAvailableMedium(medium);
+        setAvailableHard(hard);
       }
       
       if (resultsRes.data) {
@@ -129,6 +148,16 @@ const Admin = () => {
             setTimerEnabled(setting.value === "true");
           } else if (setting.key === "timer_seconds") {
             setTimerSeconds(parseInt(setting.value) || 180);
+          } else if (setting.key === "difficulty_order_enabled") {
+            setDifficultyOrderEnabled(setting.value === "true");
+          } else if (setting.key === "show_difficulty_enabled") {
+            setShowDifficultyEnabled(setting.value === "true");
+          } else if (setting.key === "questions_easy") {
+            setQuestionsEasy(parseInt(setting.value) || 3);
+          } else if (setting.key === "questions_medium") {
+            setQuestionsMedium(parseInt(setting.value) || 4);
+          } else if (setting.key === "questions_hard") {
+            setQuestionsHard(parseInt(setting.value) || 3);
           }
         });
       }
@@ -160,13 +189,15 @@ const Admin = () => {
   const saveSettings = async () => {
     setIsSavingSettings(true);
     try {
-      await supabase
-        .from("quiz_settings")
-        .upsert({ key: "timer_enabled", value: String(timerEnabled) }, { onConflict: "key" });
-
-      await supabase
-        .from("quiz_settings")
-        .upsert({ key: "timer_seconds", value: String(timerSeconds) }, { onConflict: "key" });
+      await Promise.all([
+        supabase.from("quiz_settings").upsert({ key: "timer_enabled", value: String(timerEnabled) }, { onConflict: "key" }),
+        supabase.from("quiz_settings").upsert({ key: "timer_seconds", value: String(timerSeconds) }, { onConflict: "key" }),
+        supabase.from("quiz_settings").upsert({ key: "difficulty_order_enabled", value: String(difficultyOrderEnabled) }, { onConflict: "key" }),
+        supabase.from("quiz_settings").upsert({ key: "show_difficulty_enabled", value: String(showDifficultyEnabled) }, { onConflict: "key" }),
+        supabase.from("quiz_settings").upsert({ key: "questions_easy", value: String(questionsEasy) }, { onConflict: "key" }),
+        supabase.from("quiz_settings").upsert({ key: "questions_medium", value: String(questionsMedium) }, { onConflict: "key" }),
+        supabase.from("quiz_settings").upsert({ key: "questions_hard", value: String(questionsHard) }, { onConflict: "key" }),
+      ]);
 
       toast.success("Configurações salvas com sucesso!");
     } catch {
@@ -175,6 +206,9 @@ const Admin = () => {
       setIsSavingSettings(false);
     }
   };
+
+  const totalQuestionsConfig = questionsEasy + questionsMedium + questionsHard;
+  const isValidTotal = totalQuestionsConfig === 10;
 
   const handleDeleteResult = async (resultId: string) => {
     try {
@@ -305,16 +339,17 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Timer Settings */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-primary" />
-              <CardTitle>Configurações do Timer</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-end gap-6">
+        {/* Settings Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Timer Settings */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                <CardTitle>Configurações do Timer</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <Switch
                   id="timer-enabled"
@@ -327,7 +362,7 @@ const Admin = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <Label htmlFor="timer-seconds">Tempo por pergunta (segundos):</Label>
+                <Label htmlFor="timer-seconds">Tempo por pergunta:</Label>
                 <Input
                   id="timer-seconds"
                   type="number"
@@ -335,21 +370,123 @@ const Admin = () => {
                   max={600}
                   value={timerSeconds}
                   onChange={(e) => setTimerSeconds(Math.max(30, Math.min(600, parseInt(e.target.value) || 180)))}
-                  className="w-24"
+                  className="w-20"
                   disabled={!timerEnabled}
                 />
                 <span className="text-sm text-muted-foreground">
                   ({Math.floor(timerSeconds / 60)}min {timerSeconds % 60}s)
                 </span>
               </div>
+            </CardContent>
+          </Card>
 
-              <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
-                <Save className="w-4 h-4" />
-                {isSavingSettings ? "Salvando..." : "Salvar"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Difficulty Settings */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-primary" />
+                <CardTitle>Configurações de Dificuldade</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="difficulty-order"
+                  checked={difficultyOrderEnabled}
+                  onCheckedChange={setDifficultyOrderEnabled}
+                />
+                <Label htmlFor="difficulty-order" className="cursor-pointer">
+                  Ordenar por dificuldade progressiva
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2 ml-12">
+                (fácil primeiro → média → difícil)
+              </p>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="show-difficulty"
+                  checked={showDifficultyEnabled}
+                  onCheckedChange={setShowDifficultyEnabled}
+                />
+                <Label htmlFor="show-difficulty" className="cursor-pointer">
+                  Mostrar dificuldade durante o quiz
+                </Label>
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <Label className="text-sm font-medium">Distribuição de perguntas:</Label>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="q-easy" className="text-xs text-green-600">Fáceis</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="q-easy"
+                        type="number"
+                        min={0}
+                        max={availableEasy}
+                        value={questionsEasy}
+                        onChange={(e) => setQuestionsEasy(Math.max(0, Math.min(availableEasy, parseInt(e.target.value) || 0)))}
+                        className="w-16"
+                      />
+                      <span className="text-xs text-muted-foreground">/{availableEasy}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label htmlFor="q-medium" className="text-xs text-yellow-600">Médias</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="q-medium"
+                        type="number"
+                        min={0}
+                        max={availableMedium}
+                        value={questionsMedium}
+                        onChange={(e) => setQuestionsMedium(Math.max(0, Math.min(availableMedium, parseInt(e.target.value) || 0)))}
+                        className="w-16"
+                      />
+                      <span className="text-xs text-muted-foreground">/{availableMedium}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label htmlFor="q-hard" className="text-xs text-red-600">Difíceis</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="q-hard"
+                        type="number"
+                        min={0}
+                        max={availableHard}
+                        value={questionsHard}
+                        onChange={(e) => setQuestionsHard(Math.max(0, Math.min(availableHard, parseInt(e.target.value) || 0)))}
+                        className="w-16"
+                      />
+                      <span className="text-xs text-muted-foreground">/{availableHard}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`text-sm font-medium ${isValidTotal ? 'text-green-600' : 'text-destructive'}`}>
+                  Total: {totalQuestionsConfig} perguntas {isValidTotal ? '✓' : '(deve ser 10)'}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <Button 
+            onClick={saveSettings} 
+            disabled={isSavingSettings || !isValidTotal} 
+            className="gap-2"
+            size="lg"
+          >
+            <Save className="w-4 h-4" />
+            {isSavingSettings ? "Salvando..." : "Salvar Configurações"}
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Score Groups */}

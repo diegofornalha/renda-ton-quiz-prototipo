@@ -43,6 +43,13 @@ export const useQuiz = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
 
+  // Difficulty settings
+  const [difficultyOrderEnabled, setDifficultyOrderEnabled] = useState(true);
+  const [showDifficultyEnabled, setShowDifficultyEnabled] = useState(true);
+  const [questionsEasy, setQuestionsEasy] = useState(3);
+  const [questionsMedium, setQuestionsMedium] = useState(4);
+  const [questionsHard, setQuestionsHard] = useState(3);
+
   const totalQuestions = 10; // Fixed number of questions per quiz
 
   // Clear timer on unmount
@@ -120,6 +127,16 @@ export const useQuiz = () => {
               const seconds = parseInt(setting.value) || DEFAULT_QUESTION_TIME_LIMIT;
               setQuestionTimeLimit(seconds);
               setQuestionTimeLeft(seconds);
+            } else if (setting.key === "difficulty_order_enabled") {
+              setDifficultyOrderEnabled(setting.value === "true");
+            } else if (setting.key === "show_difficulty_enabled") {
+              setShowDifficultyEnabled(setting.value === "true");
+            } else if (setting.key === "questions_easy") {
+              setQuestionsEasy(parseInt(setting.value) || 3);
+            } else if (setting.key === "questions_medium") {
+              setQuestionsMedium(parseInt(setting.value) || 4);
+            } else if (setting.key === "questions_hard") {
+              setQuestionsHard(parseInt(setting.value) || 3);
             }
           });
         }
@@ -264,6 +281,7 @@ export const useQuiz = () => {
             type: "question",
             questionIndex: nextIndex,
             options,
+            difficulty: showDifficultyEnabled ? nextQuestion.dificuldade as "fácil" | "média" | "difícil" : undefined,
           });
           
           isProcessingRef.current = false;
@@ -273,7 +291,7 @@ export const useQuiz = () => {
         }
       }, 800);
     }, 500);
-  }, [quizState, currentQuestion, score, addMessage, questions, finishQuiz, quizStartTime, totalQuestions]);
+  }, [quizState, currentQuestion, score, addMessage, questions, finishQuiz, quizStartTime, totalQuestions, questionTimeLimit, showDifficultyEnabled]);
 
   const handleTimeout = useCallback(() => {
     processAnswer(null, true);
@@ -295,16 +313,19 @@ export const useQuiz = () => {
     const medium = questions.filter(q => q.dificuldade.toLowerCase() === 'média');
     const hard = questions.filter(q => q.dificuldade.toLowerCase() === 'difícil');
 
-    // Select balanced distribution: 3 easy, 4 medium, 3 hard
+    // Select questions based on configured distribution
     const selectedQuestions = [
-      ...shuffleArray(easy).slice(0, 3),
-      ...shuffleArray(medium).slice(0, 4),
-      ...shuffleArray(hard).slice(0, 3),
+      ...shuffleArray(easy).slice(0, questionsEasy),
+      ...shuffleArray(medium).slice(0, questionsMedium),
+      ...shuffleArray(hard).slice(0, questionsHard),
     ];
 
-    // Shuffle the final selection for random order
-    const shuffledQuestions = shuffleArray(selectedQuestions);
-    setQuestions(shuffledQuestions);
+    // Order by difficulty (easy → medium → hard) or shuffle
+    const finalQuestions = difficultyOrderEnabled
+      ? selectedQuestions
+      : shuffleArray(selectedQuestions);
+    
+    setQuestions(finalQuestions);
     setQuizState("playing");
     setCurrentQuestion(0);
     setScore(0);
@@ -313,7 +334,7 @@ export const useQuiz = () => {
     setQuizStartTime(Date.now());
     isProcessingRef.current = false;
 
-    const question = shuffledQuestions[0];
+    const question = finalQuestions[0];
     const options = getOptionsFromAlternatives(question.alternativas);
 
     addMessage({
@@ -323,8 +344,9 @@ export const useQuiz = () => {
       type: "question",
       questionIndex: 0,
       options,
+      difficulty: showDifficultyEnabled ? question.dificuldade as "fácil" | "média" | "difícil" : undefined,
     });
-  }, [addMessage, questions, totalQuestions]);
+  }, [addMessage, questions, totalQuestions, questionsEasy, questionsMedium, questionsHard, difficultyOrderEnabled, showDifficultyEnabled, questionTimeLimit]);
 
   const handleOptionClick = useCallback(
     (optionIndex: number) => {

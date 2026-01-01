@@ -165,7 +165,12 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{questionsCount}</div>
-              <p className="text-xs text-muted-foreground">no banco de dados</p>
+              <button 
+                onClick={() => navigate("/gabarito")}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                ver perguntas
+              </button>
             </CardContent>
           </Card>
 

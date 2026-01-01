@@ -2,12 +2,13 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ChatMessage, QuizState, QuizQuestion, QuizLevel, QuizAlternatives } from "@/types/quiz";
 
-const WELCOME_MESSAGE: ChatMessage = {
+const createWelcomeMessage = (): ChatMessage => ({
   id: "welcome",
   role: "assistant",
   content: "Olá! 👋 Sou o assistente do Renda Extra Ton. Vou te fazer algumas perguntas para testar seus conhecimentos sobre o programa. Pronto para começar?",
   type: "text",
-};
+  isTyping: true,
+});
 
 // Shuffle array using Fisher-Yates algorithm
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -22,7 +23,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 const DEFAULT_QUESTION_TIME_LIMIT = 180; // 3 minutes in seconds
 
 export const useQuiz = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<ChatMessage[]>([createWelcomeMessage()]);
   const [quizState, setQuizState] = useState<QuizState>("idle");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
@@ -140,6 +141,29 @@ export const useQuiz = () => {
             }
           });
         }
+
+        // Trigger welcome message streaming after data loads
+        setTimeout(() => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === "welcome"
+                ? { ...msg, isTyping: false, isStreaming: true }
+                : msg
+            )
+          );
+          // Finalize after streaming
+          const welcomeContent = "Olá! 👋 Sou o assistente do Renda Extra Ton. Vou te fazer algumas perguntas para testar seus conhecimentos sobre o programa. Pronto para começar?";
+          const streamDuration = welcomeContent.length * 25 + 100;
+          setTimeout(() => {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === "welcome"
+                  ? { ...msg, isTyping: false, isStreaming: false }
+                  : msg
+              )
+            );
+          }, streamDuration);
+        }, 1500);
       } catch (error) {
         console.error("Error fetching quiz data:", error);
       } finally {
@@ -152,6 +176,40 @@ export const useQuiz = () => {
 
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
+  }, []);
+
+  // Add message with typing indicator, then streaming effect
+  const addMessageWithTyping = useCallback((message: ChatMessage, typingDelay: number = 1500) => {
+    // First, add message with typing indicator
+    const typingMessage: ChatMessage = {
+      ...message,
+      isTyping: true,
+      isStreaming: false,
+    };
+    setMessages((prev) => [...prev, typingMessage]);
+
+    // After typing delay, switch to streaming
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message.id
+            ? { ...msg, isTyping: false, isStreaming: true }
+            : msg
+        )
+      );
+
+      // After streaming completes (estimate based on content length), finalize message
+      const streamDuration = message.content.length * 25 + 100;
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === message.id
+              ? { ...msg, isTyping: false, isStreaming: false }
+              : msg
+          )
+        );
+      }, streamDuration);
+    }, typingDelay);
   }, []);
 
   const getOptionsFromAlternatives = (alternativas: QuizAlternatives): string[] => {

@@ -33,46 +33,46 @@ export const ChatQuiz = () => {
   }, [messages]);
 
   return (
-    <div className="h-screen h-[100dvh] bg-gradient-hero p-2 sm:p-3 md:p-4">
-      <div className="h-full max-w-4xl mx-auto">
-        {/* Chat Container */}
-        <main className="flex flex-col h-full bg-card rounded-2xl md:rounded-3xl border border-border shadow-card overflow-hidden">
-          <ChatHeader
-            currentQuestion={currentQuestion}
-            totalQuestions={totalQuestions}
-            isPlaying={quizState === "playing"}
-            timeLeft={questionTimeLeft}
-            timerEnabled={timerEnabled}
-          />
+    <div className="h-screen h-[100dvh] flex flex-col bg-background">
+      {/* WhatsApp-style Header */}
+      <ChatHeader
+        currentQuestion={currentQuestion}
+        totalQuestions={totalQuestions}
+        isPlaying={quizState === "playing"}
+        timeLeft={questionTimeLeft}
+        timerEnabled={timerEnabled}
+      />
 
-          <ScrollArea className="flex-1 p-3 sm:p-4 md:p-6">
-            <div className="space-y-3 sm:space-y-4 md:space-y-5">
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
+      {/* Chat Area with pattern background */}
+      <div className="flex-1 overflow-hidden chat-pattern">
+        <ScrollArea className="h-full">
+          <div className="p-3 space-y-2">
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
 
-              {showOptions && lastMessage?.options && (
-                <QuizOptions
-                  options={lastMessage.options}
-                  onSelect={handleOptionClick}
-                />
-              )}
+            {showOptions && lastMessage?.options && (
+              <QuizOptions
+                options={lastMessage.options}
+                onSelect={handleOptionClick}
+              />
+            )}
 
-              <div ref={scrollRef} />
-            </div>
-          </ScrollArea>
-
-          <div className="p-3 md:p-4 border-t border-border bg-background/50">
-            <ChatInput
-              quizState={quizState}
-              showOptions={showOptions}
-              isLoading={isLoading}
-              onStartQuiz={startQuiz}
-              onRestartQuiz={restartQuiz}
-              onSendMessage={sendMessage}
-            />
+            <div ref={scrollRef} />
           </div>
-        </main>
+        </ScrollArea>
+      </div>
+
+      {/* Bottom input area */}
+      <div className="p-2 bg-card border-t border-border">
+        <ChatInput
+          quizState={quizState}
+          showOptions={showOptions}
+          isLoading={isLoading}
+          onStartQuiz={startQuiz}
+          onRestartQuiz={restartQuiz}
+          onSendMessage={sendMessage}
+        />
       </div>
 
       <EmailModal

@@ -1,4 +1,4 @@
-import { Bot, Clock } from "lucide-react";
+import { Bot, Clock, MoreVertical } from "lucide-react";
 
 interface ChatHeaderProps {
   currentQuestion: number;
@@ -25,36 +25,45 @@ export const ChatHeader = ({
   const isCriticalTime = timerEnabled && timeLeft <= 10;
 
   return (
-    <div className="bg-primary/10 px-4 py-3 md:px-6 md:py-4 border-b border-border">
+    <div className="bg-gradient-header px-3 py-2 safe-area-inset-top">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center">
-            <Bot className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md">
+            <Bot className="w-5 h-5 text-primary-foreground" />
           </div>
-          <div>
-            <p className="font-semibold text-sm md:text-base text-foreground">Assistente Ton</p>
-            <p className="text-xs md:text-sm text-muted-foreground">
+          
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-base text-foreground truncate">Quiz Ton</p>
+            <p className="text-xs text-muted-foreground">
               {isPlaying
-                ? `Pergunta ${currentQuestion + 1}/${totalQuestions}`
-                : "Online"}
+                ? `Pergunta ${currentQuestion + 1} de ${totalQuestions}`
+                : "online"}
             </p>
           </div>
         </div>
         
-        {isPlaying && timerEnabled && (
-          <div 
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm md:text-base font-semibold transition-colors ${
-              isCriticalTime 
-                ? "bg-destructive/20 text-destructive animate-pulse" 
-                : isLowTime 
-                  ? "bg-orange-500/20 text-orange-600" 
-                  : "bg-primary/20 text-primary"
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            <span>{formatTime(timeLeft)}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isPlaying && timerEnabled && (
+            <div 
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-xs font-semibold transition-colors ${
+                isCriticalTime 
+                  ? "bg-destructive/20 text-destructive animate-pulse" 
+                  : isLowTime 
+                    ? "bg-orange-500/20 text-orange-400" 
+                    : "bg-primary/20 text-primary"
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>{formatTime(timeLeft)}</span>
+            </div>
+          )}
+          
+          <button className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

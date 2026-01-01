@@ -6,47 +6,52 @@
 
 @layer base {
   :root {
-    --background: 145 40% 96%;
-    --foreground: 150 30% 15%;
+    /* WhatsApp-inspired palette with Ton green */
+    --background: 120 30% 7%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 150 30% 15%;
+    --card: 120 25% 10%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 150 30% 15%;
+    --popover: 120 25% 12%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 153 100% 33%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 145 100% 45%;
+    --primary-foreground: 120 30% 7%;
 
-    --secondary: 145 35% 90%;
-    --secondary-foreground: 150 30% 20%;
+    --secondary: 120 20% 18%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 145 20% 92%;
-    --muted-foreground: 150 15% 45%;
+    --muted: 120 15% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 45 100% 50%;
-    --accent-foreground: 150 30% 15%;
+    --accent: 145 100% 50%;
+    --accent-foreground: 120 30% 7%;
 
-    --success: 145 70% 45%;
+    --success: 145 100% 45%;
     --success-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 145 25% 85%;
-    --input: 145 25% 88%;
-    --ring: 153 100% 33%;
+    --border: 120 15% 20%;
+    --input: 120 15% 18%;
+    --ring: 145 100% 45%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(153 100% 33%) 0%, hsl(145 80% 40%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(145 45% 92%) 0%, hsl(145 40% 96%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(145 30% 98%) 100%);
+    /* Chat bubble colors */
+    --chat-outgoing: 145 100% 40%;
+    --chat-incoming: 120 20% 18%;
 
-    --shadow-sm: 0 2px 8px hsl(150 30% 15% / 0.06);
-    --shadow-md: 0 4px 20px hsl(150 30% 15% / 0.1);
-    --shadow-lg: 0 8px 40px hsl(150 30% 15% / 0.12);
-    --shadow-glow: 0 0 30px hsl(153 100% 33% / 0.3);
+    --gradient-primary: linear-gradient(135deg, hsl(145 100% 45%) 0%, hsl(145 100% 35%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(120 30% 7%) 0%, hsl(120 25% 10%) 100%);
+    --gradient-header: linear-gradient(180deg, hsl(120 25% 12%) 0%, hsl(120 25% 10%) 100%);
+
+    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 4px 20px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 8px 40px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(145 100% 45% / 0.3);
   }
 }
 
@@ -75,12 +80,24 @@
     background: var(--gradient-hero);
   }
 
+  .bg-gradient-header {
+    background: var(--gradient-header);
+  }
+
   .shadow-card {
     box-shadow: var(--shadow-md);
   }
 
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+
+  .bg-chat-outgoing {
+    background-color: hsl(var(--chat-outgoing));
+  }
+
+  .bg-chat-incoming {
+    background-color: hsl(var(--chat-incoming));
   }
 }
 
@@ -107,6 +124,12 @@
 
   .animate-pulse-success {
     animation: pulseSuccess 0.6s ease-out;
+  }
+
+  /* WhatsApp-style chat pattern */
+  .chat-pattern {
+    background-color: hsl(var(--background));
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322c55e' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
 }
 
@@ -159,9 +182,9 @@
 
 @keyframes pulseSuccess {
   0% {
-    box-shadow: 0 0 0 0 hsl(145 70% 45% / 0.5);
+    box-shadow: 0 0 0 0 hsl(145 100% 45% / 0.5);
   }
   100% {
-    box-shadow: 0 0 0 20px hsl(145 70% 45% / 0);
+    box-shadow: 0 0 0 20px hsl(145 100% 45% / 0);
   }
 }

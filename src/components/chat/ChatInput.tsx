@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Play, RotateCcw } from "lucide-react";
+import { Send, Play, RotateCcw, Smile, Paperclip, Mic } from "lucide-react";
 import type { QuizState } from "@/types/quiz";
 
 interface ChatInputProps {
@@ -36,9 +36,9 @@ export const ChatInput = ({
       <Button
         onClick={onStartQuiz}
         disabled={isLoading}
-        className="w-full h-12 md:h-14 rounded-xl font-semibold gap-2 text-sm md:text-base bg-gradient-primary hover:opacity-90 transition-all disabled:opacity-50"
+        className="w-full h-12 rounded-full font-semibold gap-2 text-sm bg-gradient-primary hover:opacity-90 transition-all disabled:opacity-50 shadow-glow"
       >
-        <Play className="w-5 h-5 md:w-6 md:h-6" />
+        <Play className="w-5 h-5" />
         {isLoading ? "Carregando..." : "Iniciar Quiz"}
       </Button>
     );
@@ -48,9 +48,9 @@ export const ChatInput = ({
     return (
       <Button
         onClick={onRestartQuiz}
-        className="w-full h-12 md:h-14 rounded-xl font-semibold gap-2 text-sm md:text-base bg-gradient-primary hover:opacity-90 transition-all"
+        className="w-full h-12 rounded-full font-semibold gap-2 text-sm bg-gradient-primary hover:opacity-90 transition-all shadow-glow"
       >
-        <RotateCcw className="w-5 h-5 md:w-6 md:h-6" />
+        <RotateCcw className="w-5 h-5" />
         Fazer Novamente
       </Button>
     );
@@ -61,16 +61,35 @@ export const ChatInput = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 md:gap-3">
-      <Input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Digite uma mensagem..."
-        className="flex-1 h-12 md:h-14 md:text-base bg-background border-border"
-      />
-      <Button type="submit" size="icon" className="h-12 w-12 md:h-14 md:w-14 shrink-0">
-        <Send className="w-4 h-4 md:w-5 md:h-5" />
-      </Button>
+    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      {/* Emoji button */}
+      <button type="button" className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+        <Smile className="w-5 h-5" />
+      </button>
+      
+      {/* Input container */}
+      <div className="flex-1 flex items-center gap-2 bg-input rounded-full px-4 py-2">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Mensagem"
+          className="flex-1 h-auto bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 p-0"
+        />
+        <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Paperclip className="w-5 h-5" />
+        </button>
+      </div>
+      
+      {/* Send/Mic button */}
+      {input.trim() ? (
+        <Button type="submit" size="icon" className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90">
+          <Send className="w-5 h-5" />
+        </Button>
+      ) : (
+        <button type="button" className="h-10 w-10 flex items-center justify-center bg-primary rounded-full text-primary-foreground">
+          <Mic className="w-5 h-5" />
+        </button>
+      )}
     </form>
   );
 };

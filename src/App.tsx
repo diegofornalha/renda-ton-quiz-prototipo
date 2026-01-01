@@ -7,6 +7,8 @@ import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Gabarito from "./pages/Gabarito";
+import Participantes from "./pages/Participantes";
+import Embaixadores from "./pages/Embaixadores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/gabarito" element={<Gabarito />} />
+            <Route path="/participantes" element={<Participantes />} />
+            <Route path="/embaixadores" element={<Embaixadores />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

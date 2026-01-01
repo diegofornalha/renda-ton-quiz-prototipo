@@ -45,6 +45,7 @@ const Gabarito = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -97,10 +98,21 @@ const Gabarito = () => {
       filtered = filtered.filter((q) => q.topico === selectedTopic);
     }
 
+    if (selectedDifficulty) {
+      filtered = filtered.filter((q) => q.dificuldade.toLowerCase() === selectedDifficulty.toLowerCase());
+    }
+
     setFilteredQuestions(filtered);
-  }, [searchTerm, selectedTopic, questions]);
+  }, [searchTerm, selectedTopic, selectedDifficulty, questions]);
 
   const topics = [...new Set(questions.map((q) => q.topico))].sort();
+
+  // Count questions by difficulty
+  const difficultyCounts = {
+    fácil: questions.filter((q) => q.dificuldade.toLowerCase() === "fácil").length,
+    média: questions.filter((q) => q.dificuldade.toLowerCase() === "média").length,
+    difícil: questions.filter((q) => q.dificuldade.toLowerCase() === "difícil").length,
+  };
 
   const getCorrectAnswer = (alternativas: Record<string, Alternativa>) => {
     for (const [key, value] of Object.entries(alternativas)) {
@@ -154,11 +166,44 @@ const Gabarito = () => {
               />
             </div>
 
+            {/* Difficulty Filters */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedDifficulty(selectedDifficulty === "fácil" ? null : "fácil")}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  selectedDifficulty === "fácil"
+                    ? "bg-green-500 text-white"
+                    : "bg-green-500/20 text-green-700 hover:bg-green-500/30"
+                }`}
+              >
+                Fácil ({difficultyCounts.fácil})
+              </button>
+              <button
+                onClick={() => setSelectedDifficulty(selectedDifficulty === "média" ? null : "média")}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  selectedDifficulty === "média"
+                    ? "bg-yellow-500 text-white"
+                    : "bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30"
+                }`}
+              >
+                Média ({difficultyCounts.média})
+              </button>
+              <button
+                onClick={() => setSelectedDifficulty(selectedDifficulty === "difícil" ? null : "difícil")}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  selectedDifficulty === "difícil"
+                    ? "bg-red-500 text-white"
+                    : "bg-red-500/20 text-red-700 hover:bg-red-500/30"
+                }`}
+              >
+                Difícil ({difficultyCounts.difícil})
+              </button>
+            </div>
           </CardContent>
         </Card>
 
         {/* Results count */}
-        {searchTerm || selectedTopic ? (
+        {(searchTerm || selectedTopic || selectedDifficulty) ? (
           <p className="text-sm text-muted-foreground">
             Mostrando {filteredQuestions.length} de {questions.length} perguntas
           </p>

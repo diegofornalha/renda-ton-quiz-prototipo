@@ -25,12 +25,12 @@ export const ChatQuiz = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or during streaming
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages, lastMessage?.content]);
 
   return (
     <div className="h-screen h-[100dvh] flex flex-col bg-background overflow-hidden">

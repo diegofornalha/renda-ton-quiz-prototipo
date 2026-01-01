@@ -15,6 +15,8 @@ export const ChatQuiz = () => {
     isLoading,
     showEmailModal,
     finalScore,
+    questionTimeLeft,
+    totalDuration,
     startQuiz,
     handleOptionClick,
     restartQuiz,
@@ -40,6 +42,7 @@ export const ChatQuiz = () => {
             currentQuestion={currentQuestion}
             totalQuestions={totalQuestions}
             isPlaying={quizState === "playing"}
+            timeLeft={questionTimeLeft}
           />
 
           <ScrollArea className="flex-1 p-3 sm:p-4 md:p-6">
@@ -76,6 +79,7 @@ export const ChatQuiz = () => {
         isOpen={showEmailModal}
         score={finalScore}
         totalQuestions={totalQuestions}
+        durationSeconds={totalDuration}
         onClose={closeEmailModal}
         onSuccess={closeEmailModal}
       />

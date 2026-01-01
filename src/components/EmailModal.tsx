@@ -16,14 +16,22 @@ interface EmailModalProps {
   isOpen: boolean;
   score: number;
   totalQuestions: number;
+  durationSeconds: number;
   onClose: () => void;
   onSuccess: () => void;
 }
+
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}min ${secs}s`;
+};
 
 export const EmailModal = ({
   isOpen,
   score,
   totalQuestions,
+  durationSeconds,
   onClose,
   onSuccess,
 }: EmailModalProps) => {
@@ -44,6 +52,7 @@ export const EmailModal = ({
         email: email.trim(),
         score,
         total_questions: totalQuestions,
+        duration_seconds: durationSeconds,
       });
 
       if (error) throw error;
@@ -65,7 +74,7 @@ export const EmailModal = ({
         <DialogHeader>
           <DialogTitle>Registre seu resultado! 🎉</DialogTitle>
           <DialogDescription>
-            Você acertou <strong>{score}</strong> de <strong>{totalQuestions}</strong> perguntas.
+            Você acertou <strong>{score}</strong> de <strong>{totalQuestions}</strong> perguntas em <strong>{formatDuration(durationSeconds)}</strong>.
             Deixe seu email para registrar sua pontuação.
           </DialogDescription>
         </DialogHeader>

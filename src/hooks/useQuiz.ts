@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ChatMessage, QuizState, QuizQuestion, QuizLevel, QuizAlternatives } from "@/types/quiz";
 
@@ -19,6 +19,8 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
+const QUESTION_TIME_LIMIT = 180; // 3 minutes in seconds
+
 export const useQuiz = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [quizState, setQuizState] = useState<QuizState>("idle");
@@ -30,8 +32,61 @@ export const useQuiz = () => {
   const [answers, setAnswers] = useState<(boolean | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  
+  // Timer states
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME_LIMIT);
+  const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
+  const [totalDuration, setTotalDuration] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
 
   const totalQuestions = 10; // Fixed number of questions per quiz
+
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Question timer effect
+  useEffect(() => {
+    if (quizState === "playing" && !isProcessingRef.current) {
+      // Clear existing timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      // Start new timer
+      timerRef.current = setInterval(() => {
+        setQuestionTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Time's up - auto-submit wrong answer
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+            }
+            // Trigger timeout handler
+            handleTimeout();
+            return QUESTION_TIME_LIMIT;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      // Clear timer when not playing
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [quizState, currentQuestion]);
 
   // Fetch questions and levels from database
   useEffect(() => {
@@ -44,7 +99,6 @@ export const useQuiz = () => {
         ]);
 
         if (questionsRes.data) {
-          // Cast the alternativas field to the correct type
           const typedQuestions = questionsRes.data.map(q => ({
             ...q,
             alternativas: q.alternativas as unknown as QuizAlternatives
@@ -79,16 +133,141 @@ export const useQuiz = () => {
     return keys.findIndex((key) => alternativas[key].correta);
   };
 
+  const finishQuiz = useCallback((finalScoreValue: number, startTime: number) => {
+    const endTime = Date.now();
+    const durationSeconds = Math.round((endTime - startTime) / 1000);
+    setTotalDuration(durationSeconds);
+    setQuizState("finished");
+    setFinalScore(finalScoreValue);
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    const level = levels.find(
+      (l) => finalScoreValue >= l.min_score && finalScoreValue <= l.max_score
+    ) || levels[0];
+
+    const minutes = Math.floor(durationSeconds / 60);
+    const seconds = durationSeconds % 60;
+    const timeStr = `${minutes}min ${seconds}s`;
+
+    addMessage({
+      id: "result",
+      role: "assistant",
+      content: `🎉 **Quiz Finalizado!**\n\nVocê acertou **${finalScoreValue}** de **${totalQuestions}** perguntas!\n\n⏱️ **Tempo total:** ${timeStr}\n\n${level?.emoji || "🏆"} **Nível: ${level?.name || "Especialista"}**\n\n${level?.description || "Parabéns pelo seu desempenho!"}`,
+      type: "result",
+    });
+
+    setTimeout(() => {
+      setShowEmailModal(true);
+    }, 1000);
+  }, [levels, addMessage, totalQuestions]);
+
+  const processAnswer = useCallback((optionIndex: number | null, isTimeout: boolean = false) => {
+    if (isProcessingRef.current || quizState !== "playing" || questions.length === 0) return;
+    
+    isProcessingRef.current = true;
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    const question = questions[currentQuestion];
+    const correctIndex = getCorrectAnswerIndex(question.alternativas);
+    const isCorrect = optionIndex !== null && optionIndex === correctIndex;
+    
+    const keys = ["A", "B", "C", "D"] as const;
+    const correctOption = question.alternativas[keys[correctIndex]];
+
+    if (isTimeout) {
+      addMessage({
+        id: `a-${currentQuestion}`,
+        role: "user",
+        content: "⏰ Tempo esgotado!",
+        type: "text",
+      });
+    } else if (optionIndex !== null) {
+      const selectedKey = keys[optionIndex];
+      const selectedOption = question.alternativas[selectedKey];
+      addMessage({
+        id: `a-${currentQuestion}`,
+        role: "user",
+        content: `${selectedKey}) ${selectedOption.texto}`,
+        type: "text",
+      });
+    }
+
+    const newScore = isCorrect ? score + 1 : score;
+    if (isCorrect) setScore(newScore);
+
+    setAnswers((prev) => {
+      const newAnswers = [...prev];
+      newAnswers[currentQuestion] = isCorrect;
+      return newAnswers;
+    });
+
+    setTimeout(() => {
+      let feedbackContent: string;
+      if (isTimeout) {
+        feedbackContent = `⏰ **Tempo esgotado!** A resposta certa era: "${keys[correctIndex]}) ${correctOption.texto}"\n\n${correctOption.explicacao}\n\n📖 *${correctOption.regulamento_ref}*`;
+      } else if (isCorrect && optionIndex !== null) {
+        const selectedOption = question.alternativas[keys[optionIndex]];
+        feedbackContent = `✅ **Correto!** ${selectedOption.explicacao}\n\n📖 *${selectedOption.regulamento_ref}*`;
+      } else {
+        feedbackContent = `❌ **Ops!** A resposta certa era: "${keys[correctIndex]}) ${correctOption.texto}"\n\n${correctOption.explicacao}\n\n📖 *${correctOption.regulamento_ref}*`;
+      }
+
+      addMessage({
+        id: `f-${currentQuestion}`,
+        role: "assistant",
+        content: feedbackContent,
+        type: "text",
+        isCorrect,
+      });
+
+      setTimeout(() => {
+        if (currentQuestion < totalQuestions - 1) {
+          const nextIndex = currentQuestion + 1;
+          setCurrentQuestion(nextIndex);
+          setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+          const nextQuestion = questions[nextIndex];
+          const options = getOptionsFromAlternatives(nextQuestion.alternativas);
+
+          addMessage({
+            id: `q-${nextIndex}`,
+            role: "assistant",
+            content: `**Pergunta ${nextIndex + 1}/${totalQuestions}**\n\n${nextQuestion.texto}`,
+            type: "question",
+            questionIndex: nextIndex,
+            options,
+          });
+          
+          isProcessingRef.current = false;
+        } else {
+          finishQuiz(newScore, quizStartTime!);
+          isProcessingRef.current = false;
+        }
+      }, 800);
+    }, 500);
+  }, [quizState, currentQuestion, score, addMessage, questions, finishQuiz, quizStartTime, totalQuestions]);
+
+  const handleTimeout = useCallback(() => {
+    processAnswer(null, true);
+  }, [processAnswer]);
+
   const startQuiz = useCallback(() => {
     if (questions.length === 0) return;
 
-    // Shuffle and pick 10 questions
     const shuffledQuestions = shuffleArray(questions).slice(0, totalQuestions);
     setQuestions(shuffledQuestions);
     setQuizState("playing");
     setCurrentQuestion(0);
     setScore(0);
     setAnswers(new Array(totalQuestions).fill(null));
+    setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+    setQuizStartTime(Date.now());
+    isProcessingRef.current = false;
 
     const question = shuffledQuestions[0];
     const options = getOptionsFromAlternatives(question.alternativas);
@@ -105,93 +284,16 @@ export const useQuiz = () => {
 
   const handleOptionClick = useCallback(
     (optionIndex: number) => {
-      if (quizState !== "playing" || questions.length === 0) return;
-
-      const question = questions[currentQuestion];
-      const correctIndex = getCorrectAnswerIndex(question.alternativas);
-      const isCorrect = optionIndex === correctIndex;
-      
-      const keys = ["A", "B", "C", "D"] as const;
-      const selectedKey = keys[optionIndex];
-      const selectedOption = question.alternativas[selectedKey];
-      const correctOption = question.alternativas[keys[correctIndex]];
-
-      // Add user's answer
-      addMessage({
-        id: `a-${currentQuestion}`,
-        role: "user",
-        content: `${selectedKey}) ${selectedOption.texto}`,
-        type: "text",
-      });
-
-      // Update score and answers
-      const newScore = isCorrect ? score + 1 : score;
-      if (isCorrect) setScore(newScore);
-
-      setAnswers((prev) => {
-        const newAnswers = [...prev];
-        newAnswers[currentQuestion] = isCorrect;
-        return newAnswers;
-      });
-
-      // Add feedback after delay
-      setTimeout(() => {
-        const feedbackContent = isCorrect
-          ? `✅ **Correto!** ${selectedOption.explicacao}\n\n📖 *${selectedOption.regulamento_ref}*`
-          : `❌ **Ops!** A resposta certa era: "${keys[correctIndex]}) ${correctOption.texto}"\n\n${correctOption.explicacao}\n\n📖 *${correctOption.regulamento_ref}*`;
-
-        addMessage({
-          id: `f-${currentQuestion}`,
-          role: "assistant",
-          content: feedbackContent,
-          type: "text",
-          isCorrect,
-        });
-
-        // Next question or finish
-        setTimeout(() => {
-          if (currentQuestion < totalQuestions - 1) {
-            const nextIndex = currentQuestion + 1;
-            setCurrentQuestion(nextIndex);
-            const nextQuestion = questions[nextIndex];
-            const options = getOptionsFromAlternatives(nextQuestion.alternativas);
-
-            addMessage({
-              id: `q-${nextIndex}`,
-              role: "assistant",
-              content: `**Pergunta ${nextIndex + 1}/${totalQuestions}**\n\n${nextQuestion.texto}`,
-              type: "question",
-              questionIndex: nextIndex,
-              options,
-            });
-          } else {
-            // Finish quiz
-            setQuizState("finished");
-            setFinalScore(newScore);
-            const level = levels.find(
-              (l) => newScore >= l.min_score && newScore <= l.max_score
-            ) || levels[0];
-
-            addMessage({
-              id: "result",
-              role: "assistant",
-              content: `🎉 **Quiz Finalizado!**\n\nVocê acertou **${newScore}** de **${totalQuestions}** perguntas!\n\n${level?.emoji || "🏆"} **Nível: ${level?.name || "Especialista"}**\n\n${level?.description || "Parabéns pelo seu desempenho!"}`,
-              type: "result",
-            });
-
-            // Show email modal after a short delay
-            setTimeout(() => {
-              setShowEmailModal(true);
-            }, 1000);
-          }
-        }, 800);
-      }, 500);
+      processAnswer(optionIndex, false);
     },
-    [quizState, currentQuestion, score, addMessage, questions, levels]
+    [processAnswer]
   );
 
   const restartQuiz = useCallback(async () => {
-    // Refetch questions for a fresh random set
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
     try {
       const { data } = await supabase.from("quiz_questions").select("*");
       if (data) {
@@ -217,6 +319,10 @@ export const useQuiz = () => {
     setCurrentQuestion(0);
     setScore(0);
     setAnswers(new Array(totalQuestions).fill(null));
+    setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+    setQuizStartTime(null);
+    setTotalDuration(0);
+    isProcessingRef.current = false;
   }, []);
 
   const sendMessage = useCallback(
@@ -246,7 +352,7 @@ export const useQuiz = () => {
   );
 
   const lastMessage = messages[messages.length - 1];
-  const showOptions = lastMessage?.type === "question" && quizState === "playing";
+  const showOptions = lastMessage?.type === "question" && quizState === "playing" && !isProcessingRef.current;
 
   const closeEmailModal = useCallback(() => {
     setShowEmailModal(false);
@@ -262,6 +368,8 @@ export const useQuiz = () => {
     isLoading,
     showEmailModal,
     finalScore,
+    questionTimeLeft,
+    totalDuration,
     startQuiz,
     handleOptionClick,
     restartQuiz,

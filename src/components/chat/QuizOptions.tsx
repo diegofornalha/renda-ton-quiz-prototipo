@@ -49,27 +49,27 @@ export const QuizOptions = ({
       setTimeout(() => {
         containerRef.current?.scrollIntoView({ 
           behavior: "smooth", 
-          block: "end" 
+          block: "nearest" 
         });
-      }, 50);
+      }, 100);
     }
   }, [visibleCount]);
 
   if (!started) return null;
 
   return (
-    <div ref={containerRef} className="space-y-2 px-1 pb-2">
+    <div ref={containerRef} className="space-y-2 px-1 pb-2 max-w-full overflow-hidden">
       {options.slice(0, visibleCount).map((option, index) => (
         <Button
           key={index}
           variant="outline"
-          className="w-full justify-start text-left h-auto py-3 px-3 text-sm bg-secondary/50 border-border hover:bg-primary/20 hover:border-primary transition-all rounded-lg animate-fade-in"
+          className="w-full justify-start text-left h-auto py-3 px-3 text-sm bg-secondary/50 border-border hover:bg-primary/20 hover:border-primary transition-all rounded-lg animate-fade-in overflow-hidden"
           onClick={() => onSelect(index)}
         >
           <span className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center mr-3 text-xs font-bold text-primary flex-shrink-0">
             {String.fromCharCode(65 + index)}
           </span>
-          <span className="leading-relaxed text-foreground">{option}</span>
+          <span className="leading-relaxed text-foreground break-words min-w-0 flex-1">{option}</span>
         </Button>
       ))}
     </div>

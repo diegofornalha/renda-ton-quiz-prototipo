@@ -33,7 +33,7 @@ export const ChatQuiz = () => {
   }, [messages]);
 
   return (
-    <div className="h-screen h-[100dvh] flex flex-col bg-background">
+    <div className="h-screen h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* WhatsApp-style Header */}
       <ChatHeader
         currentQuestion={currentQuestion}
@@ -44,9 +44,9 @@ export const ChatQuiz = () => {
       />
 
       {/* Chat Area with pattern background */}
-      <div className="flex-1 overflow-hidden chat-pattern">
+      <div className="flex-1 min-h-0 overflow-hidden chat-pattern">
         <ScrollArea className="h-full">
-          <div className="p-3 space-y-2">
+          <div className="p-3 space-y-2 max-w-full overflow-hidden">
             {messages.map((message) => (
               message.isTyping ? (
                 <TypingIndicator key={message.id} />

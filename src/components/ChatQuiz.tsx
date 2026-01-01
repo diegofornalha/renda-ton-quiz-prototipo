@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuiz } from "@/hooks/useQuiz";
 import { ChatHeader, ChatMessage, ChatInput, QuizOptions, TypingIndicator } from "@/components/chat";
@@ -24,6 +24,12 @@ export const ChatQuiz = () => {
   } = useQuiz();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [streamingTick, setStreamingTick] = useState(0);
+
+  // Callback to be called during streaming for progressive scroll
+  const handleStreamingProgress = useCallback(() => {
+    setStreamingTick(prev => prev + 1);
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive or during streaming
   // Skip auto-scroll on initial load to keep the header visible
@@ -31,7 +37,7 @@ export const ChatQuiz = () => {
     if (scrollRef.current && (quizState !== "idle" || messages.length > 1)) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, lastMessage?.content, quizState]);
+  }, [messages, streamingTick, quizState]);
 
   return (
     <div className="h-screen h-[100dvh] flex flex-col bg-background overflow-hidden">
@@ -52,7 +58,11 @@ export const ChatQuiz = () => {
               message.isTyping ? (
                 <TypingIndicator key={message.id} />
               ) : (
-                <ChatMessage key={message.id} message={message} />
+                <ChatMessage 
+                  key={message.id} 
+                  message={message} 
+                  onStreamingProgress={message.isStreaming ? handleStreamingProgress : undefined}
+                />
               )
             ))}
 

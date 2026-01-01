@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,20 +12,12 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-
-interface QuizResult {
-  id: string;
-  email: string;
-  score: number;
-  total_questions: number;
-  completed_at: string;
-  duration_seconds: number | null;
-}
+import { ParticipantHistoryModal, ParticipantSummary, QuizResult } from "@/components/admin/ParticipantHistoryModal";
 
 interface ScoreGroup {
   score: number;
   count: number;
-  results: QuizResult[];
+  participants: ParticipantSummary[];
 }
 
 const formatDuration = (seconds: number | null): string => {
@@ -42,16 +34,78 @@ const Admin = () => {
   const [scoreGroups, setScoreGroups] = useState<ScoreGroup[]>([]);
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedParticipant, setSelectedParticipant] = useState<ParticipantSummary | null>(null);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   
   // Timer settings
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [timerSeconds, setTimerSeconds] = useState(180);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+  // Group results by email, considering only the latest participation for classification
+  const groupResultsByEmail = useCallback((allResults: QuizResult[]): ParticipantSummary[] => {
+    const emailMap = new Map<string, QuizResult[]>();
+    
+    // Group all results by email
+    allResults.forEach((result) => {
+      const existing = emailMap.get(result.email) || [];
+      existing.push(result);
+      emailMap.set(result.email, existing);
+    });
+
+    // Create ParticipantSummary for each unique email
+    const participants: ParticipantSummary[] = [];
+    emailMap.forEach((results, email) => {
+      // Sort by completed_at descending (latest first)
+      const sortedResults = [...results].sort(
+        (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+      );
+      
+      const latestResult = sortedResults[0];
+      const oldestResult = sortedResults[sortedResults.length - 1];
+      const bestScore = Math.max(...results.map((r) => r.score));
+
+      participants.push({
+        email,
+        latestResult,
+        allResults: sortedResults,
+        totalParticipations: results.length,
+        bestScore,
+        firstParticipation: oldestResult.completed_at,
+        lastParticipation: latestResult.completed_at,
+      });
+    });
+
+    return participants;
+  }, []);
+
+  // Group participants by their latest score
+  const groupParticipantsByScore = useCallback((participants: ParticipantSummary[]): ScoreGroup[] => {
+    const scoreMap = new Map<number, ParticipantSummary[]>();
+
+    participants.forEach((participant) => {
+      const score = participant.latestResult.score;
+      const existing = scoreMap.get(score) || [];
+      existing.push(participant);
+      scoreMap.set(score, existing);
+    });
+
+    const groups: ScoreGroup[] = [];
+    scoreMap.forEach((participants, score) => {
+      groups.push({
+        score,
+        count: participants.length,
+        participants,
+      });
+    });
+
+    // Sort by score descending
+    return groups.sort((a, b) => b.score - a.score);
+  }, []);
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch data directly from Supabase for prototype
       const [questionsRes, resultsRes, settingsRes] = await Promise.all([
         supabase.from("quiz_questions").select("id", { count: "exact" }),
         supabase.from("quiz_results").select("*").order("completed_at", { ascending: false }),
@@ -64,26 +118,9 @@ const Admin = () => {
       
       if (resultsRes.data) {
         setResults(resultsRes.data);
-
-        // Group by score
-        const groups: { [key: number]: QuizResult[] } = {};
-        resultsRes.data.forEach((result: QuizResult) => {
-          if (!groups[result.score]) {
-            groups[result.score] = [];
-          }
-          groups[result.score].push(result);
-        });
-
-        // Convert to array and sort by score descending
-        const groupsArray: ScoreGroup[] = Object.entries(groups)
-          .map(([score, results]) => ({
-            score: parseInt(score),
-            count: results.length,
-            results,
-          }))
-          .sort((a, b) => b.score - a.score);
-
-        setScoreGroups(groupsArray);
+        const participants = groupResultsByEmail(resultsRes.data);
+        const groups = groupParticipantsByScore(participants);
+        setScoreGroups(groups);
       }
 
       if (settingsRes.data) {
@@ -100,21 +137,33 @@ const Admin = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [groupResultsByEmail, groupParticipantsByScore]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Compute unique emails and total participations
+  const { uniqueEmails, totalParticipations } = useMemo(() => {
+    const participants = groupResultsByEmail(results);
+    return {
+      uniqueEmails: participants.length,
+      totalParticipations: results.length,
+    };
+  }, [results, groupResultsByEmail]);
+
+  // Count participants with score 10 (based on latest participation)
+  const maxScoreCount = useMemo(() => {
+    return scoreGroups.find((g) => g.score === 10)?.count || 0;
+  }, [scoreGroups]);
+
   const saveSettings = async () => {
     setIsSavingSettings(true);
     try {
-      // Upsert timer_enabled
       await supabase
         .from("quiz_settings")
         .upsert({ key: "timer_enabled", value: String(timerEnabled) }, { onConflict: "key" });
 
-      // Upsert timer_seconds
       await supabase
         .from("quiz_settings")
         .upsert({ key: "timer_seconds", value: String(timerSeconds) }, { onConflict: "key" });
@@ -136,17 +185,30 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Remove from local state
-      setResults((prev) => prev.filter((r) => r.id !== resultId));
-      setScoreGroups((prev) =>
-        prev
-          .map((group) => ({
-            ...group,
-            results: group.results.filter((r) => r.id !== resultId),
-            count: group.results.filter((r) => r.id !== resultId).length,
-          }))
-          .filter((group) => group.count > 0)
-      );
+      // Update local state
+      const newResults = results.filter((r) => r.id !== resultId);
+      setResults(newResults);
+      
+      const participants = groupResultsByEmail(newResults);
+      const groups = groupParticipantsByScore(participants);
+      setScoreGroups(groups);
+
+      // Update selected participant if modal is open
+      if (selectedParticipant) {
+        const updatedParticipant = participants.find((p) => p.email === selectedParticipant.email);
+        if (updatedParticipant) {
+          setSelectedParticipant(updatedParticipant);
+        } else {
+          // All results for this participant were deleted
+          setSelectedParticipant(null);
+          setHistoryModalOpen(false);
+        }
+      }
+
+      // Clear selected score if no more participants in that group
+      if (selectedScore !== null && !groups.find((g) => g.score === selectedScore)) {
+        setSelectedScore(null);
+      }
 
       toast.success("Resultado excluído");
     } catch {
@@ -154,8 +216,13 @@ const Admin = () => {
     }
   };
 
-  const selectedResults = selectedScore !== null
-    ? scoreGroups.find((g) => g.score === selectedScore)?.results || []
+  const handleParticipantClick = (participant: ParticipantSummary) => {
+    setSelectedParticipant(participant);
+    setHistoryModalOpen(true);
+  };
+
+  const selectedParticipants = selectedScore !== null
+    ? scoreGroups.find((g) => g.score === selectedScore)?.participants || []
     : [];
 
   return (
@@ -209,8 +276,10 @@ const Admin = () => {
               <Users className="w-5 h-5 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{results.length}</div>
-              <p className="text-xs text-muted-foreground">finalizaram o quiz</p>
+              <div className="text-3xl font-bold">{uniqueEmails}</div>
+              <p className="text-xs text-muted-foreground">
+                {uniqueEmails === 1 ? "email único" : "emails únicos"} ({totalParticipations} participações)
+              </p>
             </CardContent>
           </Card>
 
@@ -222,11 +291,9 @@ const Admin = () => {
               <Trophy className="w-5 h-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {scoreGroups.find((g) => g.score === 10)?.count || 0}
-              </div>
+              <div className="text-3xl font-bold">{maxScoreCount}</div>
               <p className="text-xs text-muted-foreground">
-                participantes com 10 pontos
+                com 10 pontos (última participação)
               </p>
             </CardContent>
           </Card>
@@ -349,28 +416,37 @@ const Admin = () => {
                 <p className="text-muted-foreground">
                   Clique em uma pontuação para ver os detalhes
                 </p>
-              ) : selectedResults.length === 0 ? (
+              ) : selectedParticipants.length === 0 ? (
                 <p className="text-muted-foreground">Nenhum resultado encontrado</p>
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-3">
-                    {selectedResults.map((result) => (
-                      <Card key={result.id} className="bg-muted/50">
+                    {selectedParticipants.map((participant) => (
+                      <Card 
+                        key={participant.email} 
+                        className="bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors"
+                        onClick={() => handleParticipantClick(participant)}
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-2 min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-primary shrink-0" />
                                 <span className="font-medium truncate">
-                                  {result.email}
+                                  {participant.email}
                                 </span>
+                                {participant.totalParticipations > 1 && (
+                                  <Badge variant="outline" className="text-xs shrink-0">
+                                    {participant.totalParticipations}x
+                                  </Badge>
+                                )}
                               </div>
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-3.5 h-3.5 shrink-0" />
                                   <span>
                                     {format(
-                                      new Date(result.completed_at),
+                                      new Date(participant.latestResult.completed_at),
                                       "dd/MM/yyyy 'às' HH:mm",
                                       { locale: ptBR }
                                     )}
@@ -378,16 +454,19 @@ const Admin = () => {
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <Clock className="w-3.5 h-3.5 shrink-0" />
-                                  <span>{formatDuration(result.duration_seconds)}</span>
+                                  <span>{formatDuration(participant.latestResult.duration_seconds)}</span>
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge className="shrink-0">
-                                {result.score}/{result.total_questions}
+                                {participant.latestResult.score}/{participant.latestResult.total_questions}
                               </Badge>
                               <button
-                                onClick={() => handleDeleteResult(result.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteResult(participant.latestResult.id);
+                                }}
                                 className="text-xs text-red-500 hover:text-red-700 font-medium"
                               >
                                 excluir
@@ -404,6 +483,14 @@ const Admin = () => {
           </Card>
         </div>
       </div>
+
+      {/* History Modal */}
+      <ParticipantHistoryModal
+        participant={selectedParticipant}
+        open={historyModalOpen}
+        onOpenChange={setHistoryModalOpen}
+        onDeleteResult={handleDeleteResult}
+      />
     </div>
   );
 };

@@ -226,9 +226,9 @@ const Gabarito = () => {
                       <div className="flex items-start gap-3">
                         <Badge
                           variant="outline"
-                          className="shrink-0 mt-0.5 bg-primary/10 text-primary border-primary/30"
+                          className={`shrink-0 mt-0.5 ${getDifficultyColor(question.dificuldade)}`}
                         >
-                          #{question.numero}
+                          {question.dificuldade.charAt(0).toUpperCase() + question.dificuldade.slice(1)} #{question.numero}
                         </Badge>
                         <CardTitle className="text-base font-medium leading-snug">
                           {question.texto}

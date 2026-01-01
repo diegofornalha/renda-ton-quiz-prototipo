@@ -290,7 +290,20 @@ export const useQuiz = () => {
     setUserEmail(email);
     setShowEmailModal(false);
 
-    const shuffledQuestions = shuffleArray(questions).slice(0, totalQuestions);
+    // Separate questions by difficulty
+    const easy = questions.filter(q => q.dificuldade.toLowerCase() === 'fácil');
+    const medium = questions.filter(q => q.dificuldade.toLowerCase() === 'média');
+    const hard = questions.filter(q => q.dificuldade.toLowerCase() === 'difícil');
+
+    // Select balanced distribution: 3 easy, 4 medium, 3 hard
+    const selectedQuestions = [
+      ...shuffleArray(easy).slice(0, 3),
+      ...shuffleArray(medium).slice(0, 4),
+      ...shuffleArray(hard).slice(0, 3),
+    ];
+
+    // Shuffle the final selection for random order
+    const shuffledQuestions = shuffleArray(selectedQuestions);
     setQuestions(shuffledQuestions);
     setQuizState("playing");
     setCurrentQuestion(0);

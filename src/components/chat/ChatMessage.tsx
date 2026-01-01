@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 interface ChatMessageProps {
   message: ChatMessageType;
   onStreamingComplete?: () => void;
+  onStreamingProgress?: () => void;
 }
 
 const parseBold = (text: string, startKey: number): React.ReactNode[] => {
@@ -75,7 +76,7 @@ const splitQuestionContent = (content: string): [string | null, string] => {
   return [null, content];
 };
 
-export const ChatMessage = ({ message, onStreamingComplete }: ChatMessageProps) => {
+export const ChatMessage = ({ message, onStreamingComplete, onStreamingProgress }: ChatMessageProps) => {
   const isUser = message.role === "user";
   const difficultyConfig = message.difficulty ? getDifficultyBadge(message.difficulty) : null;
   const isQuestionMessage = message.type === "question";
@@ -105,6 +106,10 @@ export const ChatMessage = ({ message, onStreamingComplete }: ChatMessageProps) 
       if (currentIndex < contentToStream.length) {
         setDisplayedText(contentToStream.slice(0, currentIndex + 1));
         currentIndex++;
+        // Notify progress every 10 characters for smooth scrolling
+        if (currentIndex % 10 === 0 && onStreamingProgress) {
+          onStreamingProgress();
+        }
       } else {
         setIsStreamingComplete(true);
         onStreamingComplete?.();

@@ -2,18 +2,29 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { verify } from "https://deno.land/x/djwt@v2.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const allowedOrigins = [
+  "https://uobqtfcqfcfmllgblsrs.lovableproject.com",
+  "http://localhost:5173",
+  "http://localhost:8080",
+];
+
+function getCorsHeaders(origin: string | null) {
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : "null",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify JWT token from Authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -23,17 +34,16 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const adminPassword = Deno.env.get("ADMIN_PASSWORD");
-    const jwtSecret = Deno.env.get("JWT_SECRET") || adminPassword;
+    const jwtSecret = Deno.env.get("JWT_SECRET");
 
     if (!jwtSecret) {
+      console.error("JWT_SECRET not configured");
       return new Response(
         JSON.stringify({ error: "Configuração de segurança ausente" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Verify the JWT token
     const key = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(jwtSecret),
@@ -58,10 +68,8 @@ serve(async (req) => {
       );
     }
 
-    // Parse request body
     const { timerEnabled, timerSeconds } = await req.json();
 
-    // Validate inputs
     if (typeof timerEnabled !== "boolean") {
       return new Response(
         JSON.stringify({ error: "timerEnabled deve ser boolean" }),
@@ -76,12 +84,10 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client with service role key to bypass RLS
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Update settings
     const updatedAt = new Date().toISOString();
 
     const { error: timerEnabledError } = await supabase

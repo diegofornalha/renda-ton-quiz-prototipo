@@ -1,12 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { create } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const allowedOrigins = [
+  "https://uobqtfcqfcfmllgblsrs.lovableproject.com",
+  "http://localhost:5173",
+  "http://localhost:8080",
+];
+
+function getCorsHeaders(origin: string | null) {
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : "null",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -14,17 +26,25 @@ serve(async (req) => {
   try {
     const { password } = await req.json();
     const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+    const jwtSecret = Deno.env.get("JWT_SECRET");
 
     if (!adminPassword) {
+      console.error("ADMIN_PASSWORD not configured");
       return new Response(
-        JSON.stringify({ success: false, error: "Admin password not configured" }),
+        JSON.stringify({ success: false, error: "Configuração de segurança ausente" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!jwtSecret) {
+      console.error("JWT_SECRET not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Configuração de segurança ausente" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (password === adminPassword) {
-      // Generate JWT token for authenticated sessions
-      const jwtSecret = Deno.env.get("JWT_SECRET") || adminPassword;
       const key = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(jwtSecret),
@@ -37,7 +57,7 @@ serve(async (req) => {
         { alg: "HS256", typ: "JWT" },
         { 
           role: "admin",
-          exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
+          exp: Math.floor(Date.now() / 1000) + 3600,
           iat: Math.floor(Date.now() / 1000)
         },
         key
@@ -54,6 +74,7 @@ serve(async (req) => {
       );
     }
   } catch (error) {
+    console.error("Error in verify-admin:", error);
     return new Response(
       JSON.stringify({ success: false, error: "Erro ao processar requisição" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }

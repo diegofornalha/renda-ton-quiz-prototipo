@@ -157,7 +157,6 @@ export const ChatMessage = ({ message, onStreamingComplete }: ChatMessageProps) 
         {/* Message body (with streaming for questions) */}
         <p className="text-sm leading-relaxed whitespace-pre-line">
           {parseContent(displayedText)}
-          {!isStreamingComplete && <span className="inline-block w-0.5 h-4 bg-foreground/70 ml-0.5 animate-pulse" />}
         </p>
         
         {/* Timestamp placeholder */}

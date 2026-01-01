@@ -37,7 +37,7 @@ export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  type: "text" | "question" | "result";
+  type: "text" | "question" | "result" | "welcome";
   questionIndex?: number;
   options?: string[];
   isCorrect?: boolean;

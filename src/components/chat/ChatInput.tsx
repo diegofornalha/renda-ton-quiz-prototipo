@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Play, Settings, Smile, Paperclip, Mic, Mail } from "lucide-react";
+import { Send, Settings, Smile, Paperclip, Mic, Mail } from "lucide-react";
 import type { QuizState } from "@/types/quiz";
 
 interface ChatInputProps {
@@ -35,18 +35,9 @@ export const ChatInput = ({
     }
   };
 
-  // Show start button only when idle and NOT awaiting email
+  // When idle and not awaiting email, don't show input (welcome options are shown instead)
   if (quizState === "idle" && !awaitingEmail) {
-    return (
-      <Button
-        onClick={onStartQuiz}
-        disabled={isLoading}
-        className="w-full h-12 rounded-full font-semibold gap-2 text-sm bg-gradient-primary hover:opacity-90 transition-all disabled:opacity-50 shadow-glow"
-      >
-        <Play className="w-5 h-5" />
-        {isLoading ? "Carregando..." : "Iniciar Quiz"}
-      </Button>
-    );
+    return null;
   }
 
   // Email input mode

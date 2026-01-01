@@ -2,6 +2,14 @@
 
 Plataforma de quiz educativo estilo chat para avaliar conhecimento sobre o programa "Renda Extra Ton". Sistema interativo com níveis de dificuldade progressivos, timer configurável, resultados em tempo real e painel administrativo completo.
 
+## 📸 Screenshots
+
+### Quiz, Gabarito e Dashboard
+![Quiz Chat, Gabarito e Distribuição por Pontuação](./public/screenshot-quiz-gabarito.png)
+
+### Admin, Participantes e Embaixadores
+![Configurações, Participantes e Embaixadores](./public/screenshot-admin-participantes.png)
+
 ## ✨ Funcionalidades
 
 ### Quiz Interativo

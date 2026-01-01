@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock, Settings, Save, Lock, LogOut } from "lucide-react";
+import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock, Settings, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -48,99 +48,26 @@ const Admin = () => {
   const [timerSeconds, setTimerSeconds] = useState(180);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-  // Auth state - now uses JWT token
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [password, setPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-
-  // Validate token on mount
-  useEffect(() => {
-    const token = sessionStorage.getItem("admin_token");
-    if (token) {
-      // Basic JWT structure validation (header.payload.signature)
-      const parts = token.split(".");
-      if (parts.length === 3) {
-        try {
-          const payload = JSON.parse(atob(parts[1]));
-          // Check if token is expired
-          if (payload.exp && payload.exp * 1000 > Date.now()) {
-            setAdminToken(token);
-            setIsAuthenticated(true);
-          } else {
-            // Token expired, clear it
-            sessionStorage.removeItem("admin_token");
-          }
-        } catch {
-          sessionStorage.removeItem("admin_token");
-        }
-      }
-    }
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAuthenticating(true);
-    setAuthError("");
-
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-admin", {
-        body: { password },
-      });
-
-      if (error) throw error;
-
-      if (data.success && data.token) {
-        sessionStorage.setItem("admin_token", data.token);
-        setAdminToken(data.token);
-        setIsAuthenticated(true);
-        setPassword("");
-      } else {
-        setAuthError(data.error || "Senha incorreta");
-      }
-    } catch {
-      setAuthError("Erro ao verificar senha");
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_token");
-    setAdminToken(null);
-    setIsAuthenticated(false);
-  };
-
   const fetchData = useCallback(async () => {
-    if (!adminToken) return;
-    
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("get-admin-data", {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
+      // Fetch data directly from Supabase for prototype
+      const [questionsRes, resultsRes, settingsRes] = await Promise.all([
+        supabase.from("quiz_questions").select("id", { count: "exact" }),
+        supabase.from("quiz_results").select("*").order("completed_at", { ascending: false }),
+        supabase.from("quiz_settings").select("*"),
+      ]);
 
-      if (error) throw error;
-
-      if (data.error) {
-        // Token might be invalid/expired
-        if (data.error.includes("Token") || data.error.includes("autorizado")) {
-          handleLogout();
-          toast.error("Sessão expirada. Faça login novamente.");
-          return;
-        }
-        throw new Error(data.error);
+      if (questionsRes.count !== null) {
+        setQuestionsCount(questionsRes.count);
       }
-
-      setQuestionsCount(data.questionsCount || 0);
       
-      if (data.results) {
-        setResults(data.results);
+      if (resultsRes.data) {
+        setResults(resultsRes.data);
 
         // Group by score
         const groups: { [key: number]: QuizResult[] } = {};
-        data.results.forEach((result: QuizResult) => {
+        resultsRes.data.forEach((result: QuizResult) => {
           if (!groups[result.score]) {
             groups[result.score] = [];
           }
@@ -159,8 +86,8 @@ const Admin = () => {
         setScoreGroups(groupsArray);
       }
 
-      if (data.settings) {
-        data.settings.forEach((setting: { key: string; value: string }) => {
+      if (settingsRes.data) {
+        settingsRes.data.forEach((setting: { key: string; value: string }) => {
           if (setting.key === "timer_enabled") {
             setTimerEnabled(setting.value === "true");
           } else if (setting.key === "timer_seconds") {
@@ -173,34 +100,24 @@ const Admin = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [adminToken]);
+  }, []);
 
   useEffect(() => {
-    if (isAuthenticated && adminToken) {
-      fetchData();
-    }
-  }, [isAuthenticated, adminToken, fetchData]);
+    fetchData();
+  }, [fetchData]);
 
   const saveSettings = async () => {
-    if (!adminToken) return;
-    
     setIsSavingSettings(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-settings", {
-        headers: { Authorization: `Bearer ${adminToken}` },
-        body: { timerEnabled, timerSeconds },
-      });
+      // Upsert timer_enabled
+      await supabase
+        .from("quiz_settings")
+        .upsert({ key: "timer_enabled", value: String(timerEnabled) }, { onConflict: "key" });
 
-      if (error) throw error;
-
-      if (data.error) {
-        if (data.error.includes("Token") || data.error.includes("autorizado")) {
-          handleLogout();
-          toast.error("Sessão expirada. Faça login novamente.");
-          return;
-        }
-        throw new Error(data.error);
-      }
+      // Upsert timer_seconds
+      await supabase
+        .from("quiz_settings")
+        .upsert({ key: "timer_seconds", value: String(timerSeconds) }, { onConflict: "key" });
 
       toast.success("Configurações salvas com sucesso!");
     } catch {
@@ -213,58 +130,6 @@ const Admin = () => {
   const selectedResults = selectedScore !== null
     ? scoreGroups.find((g) => g.score === selectedScore)?.results || []
     : [];
-
-  // Login screen
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
-              <Lock className="w-8 h-8 text-primary" />
-            </div>
-            <CardTitle>Acesso Administrativo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Digite a senha de admin"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isAuthenticating}
-                  autoFocus
-                />
-                <p className="text-xs text-muted-foreground">
-                  💡 Senha do primeiro acesso: <span className="font-mono font-semibold text-primary">123456</span>
-                </p>
-              </div>
-              {authError && (
-                <p className="text-sm text-destructive">{authError}</p>
-              )}
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/")}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Voltar
-                </Button>
-                <Button type="submit" disabled={isAuthenticating} className="flex-1">
-                  {isAuthenticating ? "Verificando..." : "Entrar"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-hero p-4 md:p-6">
@@ -284,10 +149,9 @@ const Admin = () => {
               Painel Administrativo
             </h1>
           </div>
-          <Button variant="outline" onClick={handleLogout} className="gap-2">
-            <LogOut className="w-4 h-4" />
-            Sair
-          </Button>
+          <Badge variant="secondary" className="text-xs">
+            Modo Protótipo
+          </Badge>
         </div>
 
         {/* Stats Cards */}
@@ -486,7 +350,7 @@ const Admin = () => {
                                 </div>
                               </div>
                             </div>
-                            <Badge variant="outline" className="shrink-0">
+                            <Badge className="shrink-0">
                               {result.score}/{result.total_questions}
                             </Badge>
                           </div>

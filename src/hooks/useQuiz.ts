@@ -320,13 +320,18 @@ export const useQuiz = () => {
         feedbackContent = `❌ **Ops!** A resposta certa era: "${keys[correctIndex]}) ${correctOption.texto}"\n\n${correctOption.explicacao}\n\n📖 *${correctOption.regulamento_ref}*`;
       }
 
-      addMessage({
+      // Use streaming for feedback messages
+      addMessageWithTyping({
         id: `f-${currentQuestion}`,
         role: "assistant",
         content: feedbackContent,
         type: "text",
         isCorrect,
-      });
+      }, 800);
+
+      // Calculate delay for next question (typing + streaming duration)
+      const feedbackStreamDuration = feedbackContent.length * 25 + 100;
+      const nextQuestionDelay = 800 + feedbackStreamDuration + 500;
 
       setTimeout(() => {
         if (currentQuestion < totalQuestions - 1) {
@@ -336,7 +341,8 @@ export const useQuiz = () => {
           const nextQuestion = questions[nextIndex];
           const options = getOptionsFromAlternatives(nextQuestion.alternativas);
 
-          addMessage({
+          // Use streaming for next question
+          addMessageWithTyping({
             id: `q-${nextIndex}`,
             role: "assistant",
             content: `**Pergunta ${nextIndex + 1}/${totalQuestions}**\n\n${nextQuestion.texto}`,
@@ -344,16 +350,16 @@ export const useQuiz = () => {
             questionIndex: nextIndex,
             options,
             difficulty: showDifficultyEnabled ? nextQuestion.dificuldade as "fácil" | "média" | "difícil" : undefined,
-          });
+          }, 800);
           
           isProcessingRef.current = false;
         } else {
           finishQuiz(newScore, quizStartTime!, userEmail!);
           isProcessingRef.current = false;
         }
-      }, 800);
+      }, nextQuestionDelay);
     }, 500);
-  }, [quizState, currentQuestion, score, addMessage, questions, finishQuiz, quizStartTime, totalQuestions, questionTimeLimit, showDifficultyEnabled, userEmail]);
+  }, [quizState, currentQuestion, score, addMessageWithTyping, questions, finishQuiz, quizStartTime, totalQuestions, questionTimeLimit, showDifficultyEnabled, userEmail]);
 
   const handleTimeout = useCallback(() => {
     processAnswer(null, true);

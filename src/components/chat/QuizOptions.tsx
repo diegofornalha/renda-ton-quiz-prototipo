@@ -13,9 +13,9 @@ export const QuizOptions = ({ options, onSelect, animateSequentially = true }: Q
   useEffect(() => {
     if (animateSequentially) {
       setVisibleCount(0);
-      // Show one option every 150ms
+      // Show one option every 250ms for smoother UX
       const timers = options.map((_, index) => 
-        setTimeout(() => setVisibleCount(index + 1), (index + 1) * 150)
+        setTimeout(() => setVisibleCount(index + 1), (index + 1) * 250)
       );
       return () => timers.forEach(clearTimeout);
     } else {

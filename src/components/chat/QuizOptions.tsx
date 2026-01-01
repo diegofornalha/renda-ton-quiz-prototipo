@@ -1,30 +1,64 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 
 interface QuizOptionsProps {
   options: string[];
   onSelect: (index: number) => void;
   animateSequentially?: boolean;
+  initialDelay?: number;
 }
 
-export const QuizOptions = ({ options, onSelect, animateSequentially = true }: QuizOptionsProps) => {
-  const [visibleCount, setVisibleCount] = useState(animateSequentially ? 0 : options.length);
+export const QuizOptions = ({ 
+  options, 
+  onSelect, 
+  animateSequentially = true,
+  initialDelay = 400 
+}: QuizOptionsProps) => {
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Initial delay before showing options
   useEffect(() => {
+    const startTimer = setTimeout(() => {
+      setStarted(true);
+    }, initialDelay);
+    return () => clearTimeout(startTimer);
+  }, [initialDelay]);
+
+  // Sequential animation after initial delay
+  useEffect(() => {
+    if (!started) return;
+    
     if (animateSequentially) {
       setVisibleCount(0);
-      // Show one option every 250ms for smoother UX
+      // Show one option every 200ms for smoother UX
       const timers = options.map((_, index) => 
-        setTimeout(() => setVisibleCount(index + 1), (index + 1) * 250)
+        setTimeout(() => setVisibleCount(index + 1), (index + 1) * 200)
       );
       return () => timers.forEach(clearTimeout);
     } else {
       setVisibleCount(options.length);
     }
-  }, [options, animateSequentially]);
+  }, [options, animateSequentially, started]);
+
+  // Auto-scroll to show options when they appear
+  useEffect(() => {
+    if (visibleCount > 0 && containerRef.current) {
+      // Small delay to let animation start
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "end" 
+        });
+      }, 50);
+    }
+  }, [visibleCount]);
+
+  if (!started) return null;
 
   return (
-    <div className="space-y-2 px-1">
+    <div ref={containerRef} className="space-y-2 px-1 pb-2">
       {options.slice(0, visibleCount).map((option, index) => (
         <Button
           key={index}

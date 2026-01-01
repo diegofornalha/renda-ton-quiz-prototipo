@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import type { ChatMessage as ChatMessageType } from "@/types/quiz";
 import { Badge } from "@/components/ui/badge";
 
@@ -6,10 +7,53 @@ interface ChatMessageProps {
   message: ChatMessageType;
 }
 
-const parseContent = (content: string) => {
-  return content.split("**").map((part, i) =>
-    i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+const parseBold = (text: string, startKey: number): React.ReactNode[] => {
+  return text.split("**").map((part, i) =>
+    i % 2 === 1 ? <strong key={startKey + i}>{part}</strong> : part
   );
+};
+
+const parseContent = (content: string): React.ReactNode[] => {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+  let keyIndex = 0;
+
+  while ((match = linkRegex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const textBefore = content.slice(lastIndex, match.index);
+      parts.push(...parseBold(textBefore, keyIndex));
+      keyIndex += 10;
+    }
+    
+    const [, linkText, linkUrl] = match;
+    const isExternal = linkUrl.startsWith('http');
+    
+    if (isExternal) {
+      parts.push(
+        <a key={keyIndex++} href={linkUrl} target="_blank" rel="noopener noreferrer"
+           className="text-primary hover:underline font-medium">
+          {linkText}
+        </a>
+      );
+    } else {
+      parts.push(
+        <Link key={keyIndex++} to={linkUrl} 
+              className="text-primary hover:underline font-medium">
+          {linkText}
+        </Link>
+      );
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    parts.push(...parseBold(content.slice(lastIndex), keyIndex));
+  }
+
+  return parts.length > 0 ? parts : parseBold(content, 0);
 };
 
 const getDifficultyBadge = (difficulty: string) => {

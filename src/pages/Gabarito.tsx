@@ -170,90 +170,88 @@ const Gabarito = () => {
             <p className="text-muted-foreground">Carregando perguntas...</p>
           </div>
         ) : (
-          <ScrollArea className="h-[calc(100vh-320px)]">
-            <div className="space-y-4 pr-4">
-              {filteredQuestions.map((question) => {
-                const correctAnswer = getCorrectAnswer(question.alternativas);
+          <div className="space-y-4 pb-8">
+            {filteredQuestions.map((question) => {
+              const correctAnswer = getCorrectAnswer(question.alternativas);
 
-                return (
-                  <Card key={question.id} className="overflow-hidden">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <Badge
-                            variant="outline"
-                            className="shrink-0 mt-0.5 bg-primary/10 text-primary border-primary/30"
-                          >
-                            #{question.numero}
-                          </Badge>
-                          <CardTitle className="text-base font-medium leading-snug">
-                            {question.texto}
-                          </CardTitle>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2 ml-10">
+              return (
+                <Card key={question.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
                         <Badge
                           variant="outline"
-                          className={getDifficultyColor(question.dificuldade)}
+                          className="shrink-0 mt-0.5 bg-primary/10 text-primary border-primary/30"
                         >
-                          {question.dificuldade}
+                          #{question.numero}
                         </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          {question.topico}
-                        </Badge>
+                        <CardTitle className="text-base font-medium leading-snug">
+                          {question.texto}
+                        </CardTitle>
                       </div>
-                    </CardHeader>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2 ml-10">
+                      <Badge
+                        variant="outline"
+                        className={getDifficultyColor(question.dificuldade)}
+                      >
+                        {question.dificuldade}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {question.topico}
+                      </Badge>
+                    </div>
+                  </CardHeader>
 
-                    <CardContent className="pt-0">
-                      {correctAnswer && (
-                        <div className="space-y-3">
-                          {/* Correct Answer */}
-                          <div className="flex items-start gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                            <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="font-medium text-green-700">
-                                Resposta Correta: {correctAnswer.key}
-                              </p>
-                              <p className="text-foreground mt-1">
-                                {correctAnswer.texto}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Explanation */}
-                          <div className="p-3 rounded-lg bg-muted/50 border">
-                            <p className="text-sm text-muted-foreground mb-2 font-medium">
-                              Explicação:
+                  <CardContent className="pt-0">
+                    {correctAnswer && (
+                      <div className="space-y-3">
+                        {/* Correct Answer */}
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                          <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-green-700">
+                              Resposta Correta: {correctAnswer.key}
                             </p>
-                            <p className="text-sm">{correctAnswer.explicacao}</p>
-                          </div>
-
-                          {/* Regulation Reference */}
-                          <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
-                            <FileText className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                            <p className="text-xs text-muted-foreground">
-                              📖{" "}
-                              <span className="font-medium text-foreground">
-                                {correctAnswer.regulamento_ref}
-                              </span>
+                            <p className="text-foreground mt-1">
+                              {correctAnswer.texto}
                             </p>
                           </div>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
 
-              {filteredQuestions.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    Nenhuma pergunta encontrada com os filtros selecionados.
-                  </p>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                        {/* Explanation */}
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-sm text-muted-foreground mb-2 font-medium">
+                            Explicação:
+                          </p>
+                          <p className="text-sm">{correctAnswer.explicacao}</p>
+                        </div>
+
+                        {/* Regulation Reference */}
+                        <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                          <FileText className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <p className="text-xs text-muted-foreground">
+                            📖{" "}
+                            <span className="font-medium text-foreground">
+                              {correctAnswer.regulamento_ref}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {filteredQuestions.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  Nenhuma pergunta encontrada com os filtros selecionados.
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

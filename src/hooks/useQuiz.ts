@@ -21,7 +21,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-const DEFAULT_QUESTION_TIME_LIMIT = 180; // 3 minutes in seconds
+const DEFAULT_QUESTION_TIME_LIMIT = 30; // 30 seconds per question
 
 // Email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

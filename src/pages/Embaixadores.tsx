@@ -179,9 +179,9 @@ const Embaixadores = () => {
                       onClick={() => handleParticipantClick(participant)}
                     >
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                           <div className="space-y-2 min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Mail className="w-4 h-4 text-primary shrink-0" />
                               <span className="font-medium truncate">
                                 {participant.email}
@@ -209,7 +209,7 @@ const Embaixadores = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 shrink-0">
                             <Badge className="shrink-0 bg-accent text-accent-foreground">
                               10/10 🏆
                             </Badge>

@@ -6,7 +6,56 @@
 
 @layer base {
   :root {
-    /* WhatsApp-inspired palette with Ton green */
+    /* Light theme - Default */
+    --background: 0 0% 98%;
+    --foreground: 120 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 120 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 120 30% 15%;
+
+    --primary: 145 100% 38%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 120 15% 92%;
+    --secondary-foreground: 120 30% 25%;
+
+    --muted: 120 10% 94%;
+    --muted-foreground: 120 10% 40%;
+
+    --accent: 145 100% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 145 100% 38%;
+    --success-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 10% 85%;
+    --input: 120 10% 90%;
+    --ring: 145 100% 38%;
+
+    --radius: 0.75rem;
+
+    /* Chat bubble colors */
+    --chat-outgoing: 145 100% 38%;
+    --chat-incoming: 120 10% 92%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(145 100% 38%) 0%, hsl(145 100% 30%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 98%) 0%, hsl(120 15% 95%) 100%);
+    --gradient-header: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(120 15% 97%) 100%);
+
+    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.06);
+    --shadow-md: 0 4px 20px hsl(0 0% 0% / 0.08);
+    --shadow-lg: 0 8px 40px hsl(0 0% 0% / 0.12);
+    --shadow-glow: 0 0 30px hsl(145 100% 45% / 0.15);
+  }
+
+  .dark {
+    /* Dark theme - WhatsApp-inspired palette with Ton green */
     --background: 120 30% 7%;
     --foreground: 0 0% 98%;
 
@@ -37,8 +86,6 @@
     --border: 120 15% 20%;
     --input: 120 15% 18%;
     --ring: 145 100% 45%;
-
-    --radius: 0.75rem;
 
     /* Chat bubble colors */
     --chat-outgoing: 145 100% 40%;

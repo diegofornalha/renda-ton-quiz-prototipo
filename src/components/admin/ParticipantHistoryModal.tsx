@@ -115,14 +115,14 @@ export const ParticipantHistoryModal = ({
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={index === 0 ? "default" : "secondary"}>
                         {result.score}/{result.total_questions}
                         {index === 0 && " (atual)"}
                       </Badge>
                       <button
                         onClick={() => onDeleteResult(result.id)}
-                        className="text-xs text-red-500 hover:text-red-700 font-medium"
+                        className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0"
                       >
                         excluir
                       </button>

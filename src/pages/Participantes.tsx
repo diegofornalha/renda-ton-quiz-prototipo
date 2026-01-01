@@ -198,7 +198,7 @@ const Participantes = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <div className="flex items-center gap-1">
                               <Trophy className="w-4 h-4 text-accent" />
                               <span className="text-sm font-medium">{participant.bestScore}/10</span>
@@ -211,7 +211,7 @@ const Participantes = () => {
                                 e.stopPropagation();
                                 handleDeleteResult(participant.latestResult.id);
                               }}
-                              className="text-xs text-red-500 hover:text-red-700 font-medium"
+                              className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0"
                             >
                               excluir
                             </button>

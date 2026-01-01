@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,17 +48,34 @@ const Admin = () => {
   const [timerSeconds, setTimerSeconds] = useState(180);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-  // Auth state
+  // Auth state - now uses JWT token
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Check session storage on mount
+  // Validate token on mount
   useEffect(() => {
-    const adminAuth = sessionStorage.getItem("admin_authenticated");
-    if (adminAuth === "true") {
-      setIsAuthenticated(true);
+    const token = sessionStorage.getItem("admin_token");
+    if (token) {
+      // Basic JWT structure validation (header.payload.signature)
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        try {
+          const payload = JSON.parse(atob(parts[1]));
+          // Check if token is expired
+          if (payload.exp && payload.exp * 1000 > Date.now()) {
+            setAdminToken(token);
+            setIsAuthenticated(true);
+          } else {
+            // Token expired, clear it
+            sessionStorage.removeItem("admin_token");
+          }
+        } catch {
+          sessionStorage.removeItem("admin_token");
+        }
+      }
     }
   }, []);
 
@@ -74,15 +91,15 @@ const Admin = () => {
 
       if (error) throw error;
 
-      if (data.success) {
-        sessionStorage.setItem("admin_authenticated", "true");
+      if (data.success && data.token) {
+        sessionStorage.setItem("admin_token", data.token);
+        setAdminToken(data.token);
         setIsAuthenticated(true);
         setPassword("");
       } else {
         setAuthError(data.error || "Senha incorreta");
       }
-    } catch (error) {
-      console.error("Auth error:", error);
+    } catch {
       setAuthError("Erro ao verificar senha");
     } finally {
       setIsAuthenticating(false);
@@ -90,92 +107,103 @@ const Admin = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("admin_authenticated");
+    sessionStorage.removeItem("admin_token");
+    setAdminToken(null);
     setIsAuthenticated(false);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch questions count
-        const { count: questionsCountData } = await supabase
-          .from("quiz_questions")
-          .select("*", { count: "exact", head: true });
+  const fetchData = useCallback(async () => {
+    if (!adminToken) return;
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-admin-data", {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
 
-        setQuestionsCount(questionsCountData || 0);
+      if (error) throw error;
 
-        // Fetch all results
-        const { data: resultsData } = await supabase
-          .from("quiz_results")
-          .select("*")
-          .order("score", { ascending: false })
-          .order("completed_at", { ascending: false });
-
-        if (resultsData) {
-          setResults(resultsData);
-
-          // Group by score
-          const groups: { [key: number]: QuizResult[] } = {};
-          resultsData.forEach((result) => {
-            if (!groups[result.score]) {
-              groups[result.score] = [];
-            }
-            groups[result.score].push(result);
-          });
-
-          // Convert to array and sort by score descending
-          const groupsArray: ScoreGroup[] = Object.entries(groups)
-            .map(([score, results]) => ({
-              score: parseInt(score),
-              count: results.length,
-              results,
-            }))
-            .sort((a, b) => b.score - a.score);
-
-          setScoreGroups(groupsArray);
+      if (data.error) {
+        // Token might be invalid/expired
+        if (data.error.includes("Token") || data.error.includes("autorizado")) {
+          handleLogout();
+          toast.error("Sessão expirada. Faça login novamente.");
+          return;
         }
-
-        // Fetch settings
-        const { data: settingsData } = await supabase
-          .from("quiz_settings")
-          .select("*");
-
-        if (settingsData) {
-          settingsData.forEach((setting) => {
-            if (setting.key === "timer_enabled") {
-              setTimerEnabled(setting.value === "true");
-            } else if (setting.key === "timer_seconds") {
-              setTimerSeconds(parseInt(setting.value) || 180);
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      } finally {
-        setIsLoading(false);
+        throw new Error(data.error);
       }
-    };
 
-    fetchData();
-  }, []);
+      setQuestionsCount(data.questionsCount || 0);
+      
+      if (data.results) {
+        setResults(data.results);
+
+        // Group by score
+        const groups: { [key: number]: QuizResult[] } = {};
+        data.results.forEach((result: QuizResult) => {
+          if (!groups[result.score]) {
+            groups[result.score] = [];
+          }
+          groups[result.score].push(result);
+        });
+
+        // Convert to array and sort by score descending
+        const groupsArray: ScoreGroup[] = Object.entries(groups)
+          .map(([score, results]) => ({
+            score: parseInt(score),
+            count: results.length,
+            results,
+          }))
+          .sort((a, b) => b.score - a.score);
+
+        setScoreGroups(groupsArray);
+      }
+
+      if (data.settings) {
+        data.settings.forEach((setting: { key: string; value: string }) => {
+          if (setting.key === "timer_enabled") {
+            setTimerEnabled(setting.value === "true");
+          } else if (setting.key === "timer_seconds") {
+            setTimerSeconds(parseInt(setting.value) || 180);
+          }
+        });
+      }
+    } catch {
+      toast.error("Erro ao carregar dados");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [adminToken]);
+
+  useEffect(() => {
+    if (isAuthenticated && adminToken) {
+      fetchData();
+    }
+  }, [isAuthenticated, adminToken, fetchData]);
 
   const saveSettings = async () => {
+    if (!adminToken) return;
+    
     setIsSavingSettings(true);
     try {
-      await Promise.all([
-        supabase
-          .from("quiz_settings")
-          .update({ value: timerEnabled.toString(), updated_at: new Date().toISOString() })
-          .eq("key", "timer_enabled"),
-        supabase
-          .from("quiz_settings")
-          .update({ value: timerSeconds.toString(), updated_at: new Date().toISOString() })
-          .eq("key", "timer_seconds"),
-      ]);
+      const { data, error } = await supabase.functions.invoke("update-admin-settings", {
+        headers: { Authorization: `Bearer ${adminToken}` },
+        body: { timerEnabled, timerSeconds },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        if (data.error.includes("Token") || data.error.includes("autorizado")) {
+          handleLogout();
+          toast.error("Sessão expirada. Faça login novamente.");
+          return;
+        }
+        throw new Error(data.error);
+      }
+
       toast.success("Configurações salvas com sucesso!");
-    } catch (error) {
-      console.error("Error saving settings:", error);
+    } catch {
       toast.error("Erro ao salvar configurações");
     } finally {
       setIsSavingSettings(false);

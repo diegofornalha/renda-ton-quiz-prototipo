@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { create } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,8 +23,28 @@ serve(async (req) => {
     }
 
     if (password === adminPassword) {
+      // Generate JWT token for authenticated sessions
+      const jwtSecret = Deno.env.get("JWT_SECRET") || adminPassword;
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(jwtSecret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign", "verify"]
+      );
+
+      const token = await create(
+        { alg: "HS256", typ: "JWT" },
+        { 
+          role: "admin",
+          exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
+          iat: Math.floor(Date.now() / 1000)
+        },
+        key
+      );
+
       return new Response(
-        JSON.stringify({ success: true }),
+        JSON.stringify({ success: true, token }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {

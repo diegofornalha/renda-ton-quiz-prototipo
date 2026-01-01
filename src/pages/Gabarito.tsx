@@ -127,7 +127,7 @@ const Gabarito = () => {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
               <BookOpen className="w-7 h-7 text-primary" />
-              Gabarito Completo
+              Perguntas e Respostas Geradas com IA através do regulamento
             </h1>
             <p className="text-muted-foreground">
               {questions.length} perguntas com respostas e explicações

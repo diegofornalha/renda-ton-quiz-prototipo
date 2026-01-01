@@ -277,9 +277,12 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{uniqueEmails}</div>
-              <p className="text-xs text-muted-foreground">
-                {uniqueEmails === 1 ? "email único" : "emails únicos"} ({totalParticipations} participações)
-              </p>
+              <button 
+                onClick={() => navigate("/participantes")}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                ver participantes
+              </button>
             </CardContent>
           </Card>
 
@@ -292,9 +295,12 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{maxScoreCount}</div>
-              <p className="text-xs text-muted-foreground">
-                com 10 pontos (última participação)
-              </p>
+              <button 
+                onClick={() => navigate("/embaixadores")}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                ver embaixadores
+              </button>
             </CardContent>
           </Card>
         </div>

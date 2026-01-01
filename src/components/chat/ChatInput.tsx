@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Play, RotateCcw, Smile, Paperclip, Mic } from "lucide-react";
+import { Send, Play, Settings, Smile, Paperclip, Mic } from "lucide-react";
 import type { QuizState } from "@/types/quiz";
 
 interface ChatInputProps {
@@ -22,6 +23,7 @@ export const ChatInput = ({
   onSendMessage,
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +49,11 @@ export const ChatInput = ({
   if (quizState === "finished") {
     return (
       <Button
-        onClick={onRestartQuiz}
+        onClick={() => navigate("/admin")}
         className="w-full h-12 rounded-full font-semibold gap-2 text-sm bg-gradient-primary hover:opacity-90 transition-all shadow-glow"
       >
-        <RotateCcw className="w-5 h-5" />
-        Fazer Novamente
+        <Settings className="w-5 h-5" />
+        Ir para Tela do Administrador
       </Button>
     );
   }

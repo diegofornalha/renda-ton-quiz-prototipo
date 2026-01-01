@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuiz } from "@/hooks/useQuiz";
 import { ChatHeader, ChatMessage, ChatInput, QuizOptions, TypingIndicator } from "@/components/chat";
-import { EmailModal } from "@/components/EmailModal";
 
 export const ChatQuiz = () => {
   const {
@@ -13,15 +12,13 @@ export const ChatQuiz = () => {
     showOptions,
     lastMessage,
     isLoading,
-    showEmailModal,
+    awaitingEmail,
     questionTimeLeft,
     timerEnabled,
     startQuiz,
-    startQuizWithEmail,
     handleOptionClick,
     restartQuiz,
     sendMessage,
-    closeEmailModal,
   } = useQuiz();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -74,17 +71,12 @@ export const ChatQuiz = () => {
           quizState={quizState}
           showOptions={showOptions}
           isLoading={isLoading}
+          awaitingEmail={awaitingEmail}
           onStartQuiz={startQuiz}
           onRestartQuiz={restartQuiz}
           onSendMessage={sendMessage}
         />
       </div>
-
-      <EmailModal
-        isOpen={showEmailModal}
-        onSuccess={startQuizWithEmail}
-        onClose={closeEmailModal}
-      />
     </div>
   );
 };

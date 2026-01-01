@@ -22,6 +22,9 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const DEFAULT_QUESTION_TIME_LIMIT = 180; // 3 minutes in seconds
 
+// Email validation regex
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export const useQuiz = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([createWelcomeMessage()]);
   const [quizState, setQuizState] = useState<QuizState>("idle");
@@ -32,7 +35,7 @@ export const useQuiz = () => {
   const [levels, setLevels] = useState<QuizLevel[]>([]);
   const [answers, setAnswers] = useState<(boolean | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [awaitingEmail, setAwaitingEmail] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   
   // Timer states
@@ -349,22 +352,17 @@ export const useQuiz = () => {
         }
       }, 800);
     }, 500);
-  }, [quizState, currentQuestion, score, addMessage, questions, finishQuiz, quizStartTime, totalQuestions, questionTimeLimit, showDifficultyEnabled]);
+  }, [quizState, currentQuestion, score, addMessage, questions, finishQuiz, quizStartTime, totalQuestions, questionTimeLimit, showDifficultyEnabled, userEmail]);
 
   const handleTimeout = useCallback(() => {
     processAnswer(null, true);
   }, [processAnswer]);
 
-  const requestEmailForQuiz = useCallback(() => {
-    if (questions.length === 0) return;
-    setShowEmailModal(true);
-  }, [questions.length]);
-
   const startQuizWithEmail = useCallback((email: string) => {
     if (questions.length === 0) return;
 
     setUserEmail(email);
-    setShowEmailModal(false);
+    setAwaitingEmail(false);
 
     // Separate questions by difficulty
     const easy = questions.filter(q => q.dificuldade.toLowerCase() === 'fácil');
@@ -447,13 +445,29 @@ export const useQuiz = () => {
     setQuizStartTime(null);
     setTotalDuration(0);
     setUserEmail(null);
+    setAwaitingEmail(false);
     isProcessingRef.current = false;
-  }, [totalQuestions]);
+  }, [totalQuestions, questionTimeLimit]);
+
+  // Start quiz by asking for email in chat
+  const startQuiz = useCallback(() => {
+    if (questions.length === 0) return;
+    
+    setAwaitingEmail(true);
+    
+    addMessageWithTyping({
+      id: "ask-email",
+      role: "assistant",
+      content: "Ótimo! Antes de começarmos, preciso do seu email para registrar sua participação. 📧",
+      type: "text",
+    });
+  }, [questions.length, addMessageWithTyping]);
 
   const sendMessage = useCallback(
     (text: string) => {
       if (!text.trim()) return;
 
+      // Add user message
       addMessage({
         id: Date.now().toString(),
         role: "user",
@@ -461,6 +475,38 @@ export const useQuiz = () => {
         type: "text",
       });
 
+      // If awaiting email, validate and start quiz
+      if (awaitingEmail) {
+        const trimmedEmail = text.trim().toLowerCase();
+        
+        if (EMAIL_REGEX.test(trimmedEmail) && trimmedEmail.length <= 254) {
+          // Valid email - confirm and start quiz
+          addMessageWithTyping({
+            id: "email-confirmed",
+            role: "assistant",
+            content: `Perfeito! Vamos começar o quiz... 🚀`,
+            type: "text",
+          }, 1000);
+          
+          // After animation, start quiz
+          const confirmContent = "Perfeito! Vamos começar o quiz... 🚀";
+          const totalDelay = 1000 + (confirmContent.length * 25) + 300;
+          setTimeout(() => {
+            startQuizWithEmail(trimmedEmail);
+          }, totalDelay);
+        } else {
+          // Invalid email
+          addMessageWithTyping({
+            id: `email-invalid-${Date.now()}`,
+            role: "assistant",
+            content: "Hmm, esse email não parece válido. Pode tentar novamente? 🤔",
+            type: "text",
+          });
+        }
+        return;
+      }
+
+      // Normal behavior for other messages
       setTimeout(() => {
         addMessage({
           id: (Date.now() + 1).toString(),
@@ -473,17 +519,11 @@ export const useQuiz = () => {
         });
       }, 500);
     },
-    [quizState, addMessage]
+    [quizState, addMessage, addMessageWithTyping, awaitingEmail, startQuizWithEmail]
   );
 
   const lastMessage = messages[messages.length - 1];
   const showOptions = lastMessage?.type === "question" && quizState === "playing" && !isProcessingRef.current;
-
-  const closeEmailModal = useCallback(() => {
-    setShowEmailModal(false);
-  }, []);
-
-  const startQuiz = requestEmailForQuiz;
 
   return {
     messages,
@@ -493,7 +533,7 @@ export const useQuiz = () => {
     showOptions,
     lastMessage,
     isLoading,
-    showEmailModal,
+    awaitingEmail,
     finalScore,
     questionTimeLeft,
     totalDuration,
@@ -503,6 +543,5 @@ export const useQuiz = () => {
     handleOptionClick,
     restartQuiz,
     sendMessage,
-    closeEmailModal,
   };
 };

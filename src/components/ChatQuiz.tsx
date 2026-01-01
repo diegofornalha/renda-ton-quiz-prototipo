@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuiz } from "@/hooks/useQuiz";
-import { ChatHeader, ChatMessage, ChatInput, QuizOptions } from "@/components/chat";
+import { ChatHeader, ChatMessage, ChatInput, QuizOptions, TypingIndicator } from "@/components/chat";
 import { EmailModal } from "@/components/EmailModal";
 
 export const ChatQuiz = () => {
@@ -49,7 +49,11 @@ export const ChatQuiz = () => {
         <ScrollArea className="h-full">
           <div className="p-3 space-y-2">
             {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              message.isTyping ? (
+                <TypingIndicator key={message.id} />
+              ) : (
+                <ChatMessage key={message.id} message={message} />
+              )
             ))}
 
             {showOptions && lastMessage?.options && (

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { ChatMessage as ChatMessageType } from "@/types/quiz";
 import { Badge } from "@/components/ui/badge";
 
@@ -23,6 +24,33 @@ const getDifficultyBadge = (difficulty: string) => {
 export const ChatMessage = ({ message }: ChatMessageProps) => {
   const isUser = message.role === "user";
   const difficultyConfig = message.difficulty ? getDifficultyBadge(message.difficulty) : null;
+  
+  const [displayedText, setDisplayedText] = useState(message.isStreaming ? "" : message.content);
+  const [isStreamingComplete, setIsStreamingComplete] = useState(!message.isStreaming);
+
+  useEffect(() => {
+    if (!message.isStreaming) {
+      setDisplayedText(message.content);
+      setIsStreamingComplete(true);
+      return;
+    }
+
+    setDisplayedText("");
+    setIsStreamingComplete(false);
+    let currentIndex = 0;
+
+    const interval = setInterval(() => {
+      if (currentIndex < message.content.length) {
+        setDisplayedText(message.content.slice(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        setIsStreamingComplete(true);
+        clearInterval(interval);
+      }
+    }, 25);
+
+    return () => clearInterval(interval);
+  }, [message.content, message.isStreaming]);
 
   return (
     <div
@@ -57,13 +85,16 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         )}
         
         <p className="text-sm leading-relaxed whitespace-pre-line">
-          {parseContent(message.content)}
+          {parseContent(displayedText)}
+          {!isStreamingComplete && <span className="inline-block w-0.5 h-4 bg-foreground/70 ml-0.5 animate-pulse" />}
         </p>
         
         {/* Timestamp placeholder */}
-        <div className={`text-[10px] mt-0.5 text-right ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-          {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-        </div>
+        {isStreamingComplete && (
+          <div className={`text-[10px] mt-0.5 text-right ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+            {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        )}
       </div>
     </div>
   );

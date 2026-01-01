@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Play, Settings, Smile, Paperclip, Mic } from "lucide-react";
+import { Send, Play, Settings, Smile, Paperclip, Mic, Mail } from "lucide-react";
 import type { QuizState } from "@/types/quiz";
 
 interface ChatInputProps {
   quizState: QuizState;
   showOptions: boolean;
   isLoading?: boolean;
+  awaitingEmail?: boolean;
   onStartQuiz: () => void;
   onRestartQuiz: () => void;
   onSendMessage: (text: string) => void;
@@ -18,6 +19,7 @@ export const ChatInput = ({
   quizState,
   showOptions,
   isLoading = false,
+  awaitingEmail = false,
   onStartQuiz,
   onRestartQuiz,
   onSendMessage,
@@ -33,7 +35,8 @@ export const ChatInput = ({
     }
   };
 
-  if (quizState === "idle") {
+  // Show start button only when idle and NOT awaiting email
+  if (quizState === "idle" && !awaitingEmail) {
     return (
       <Button
         onClick={onStartQuiz}
@@ -43,6 +46,35 @@ export const ChatInput = ({
         <Play className="w-5 h-5" />
         {isLoading ? "Carregando..." : "Iniciar Quiz"}
       </Button>
+    );
+  }
+
+  // Email input mode
+  if (awaitingEmail) {
+    return (
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <div className="flex-1 flex items-center gap-2 bg-input rounded-full px-4 py-2">
+          <Mail className="w-5 h-5 text-muted-foreground" />
+          <Input
+            type="email"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Digite seu email..."
+            className="flex-1 h-auto bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 p-0"
+            autoFocus
+            maxLength={254}
+          />
+        </div>
+        
+        <Button 
+          type="submit" 
+          size="icon" 
+          className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90"
+          disabled={!input.trim()}
+        >
+          <Send className="w-5 h-5" />
+        </Button>
+      </form>
     );
   }
 

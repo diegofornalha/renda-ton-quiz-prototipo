@@ -19,7 +19,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-const QUESTION_TIME_LIMIT = 180; // 3 minutes in seconds
+const DEFAULT_QUESTION_TIME_LIMIT = 180; // 3 minutes in seconds
 
 export const useQuiz = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
@@ -35,7 +35,9 @@ export const useQuiz = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   
   // Timer states
-  const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME_LIMIT);
+  const [timerEnabled, setTimerEnabled] = useState(true);
+  const [questionTimeLimit, setQuestionTimeLimit] = useState(DEFAULT_QUESTION_TIME_LIMIT);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(DEFAULT_QUESTION_TIME_LIMIT);
   const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
   const [totalDuration, setTotalDuration] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -54,7 +56,7 @@ export const useQuiz = () => {
 
   // Question timer effect
   useEffect(() => {
-    if (quizState === "playing" && !isProcessingRef.current) {
+    if (quizState === "playing" && !isProcessingRef.current && timerEnabled) {
       // Clear existing timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -70,13 +72,13 @@ export const useQuiz = () => {
             }
             // Trigger timeout handler
             handleTimeout();
-            return QUESTION_TIME_LIMIT;
+            return questionTimeLimit;
           }
           return prev - 1;
         });
       }, 1000);
     } else {
-      // Clear timer when not playing
+      // Clear timer when not playing or timer disabled
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -87,16 +89,17 @@ export const useQuiz = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [quizState, currentQuestion]);
+  }, [quizState, currentQuestion, timerEnabled, questionTimeLimit]);
 
-  // Fetch questions and levels from database
+  // Fetch questions, levels, and settings from database
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [questionsRes, levelsRes] = await Promise.all([
+        const [questionsRes, levelsRes, settingsRes] = await Promise.all([
           supabase.from("quiz_questions").select("*"),
           supabase.from("quiz_levels").select("*").order("min_score"),
+          supabase.from("quiz_settings").select("*"),
         ]);
 
         if (questionsRes.data) {
@@ -108,6 +111,17 @@ export const useQuiz = () => {
         }
         if (levelsRes.data) {
           setLevels(levelsRes.data as QuizLevel[]);
+        }
+        if (settingsRes.data) {
+          settingsRes.data.forEach((setting) => {
+            if (setting.key === "timer_enabled") {
+              setTimerEnabled(setting.value === "true");
+            } else if (setting.key === "timer_seconds") {
+              const seconds = parseInt(setting.value) || DEFAULT_QUESTION_TIME_LIMIT;
+              setQuestionTimeLimit(seconds);
+              setQuestionTimeLeft(seconds);
+            }
+          });
         }
       } catch (error) {
         console.error("Error fetching quiz data:", error);
@@ -239,7 +253,7 @@ export const useQuiz = () => {
         if (currentQuestion < totalQuestions - 1) {
           const nextIndex = currentQuestion + 1;
           setCurrentQuestion(nextIndex);
-          setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+          setQuestionTimeLeft(questionTimeLimit);
           const nextQuestion = questions[nextIndex];
           const options = getOptionsFromAlternatives(nextQuestion.alternativas);
 
@@ -282,7 +296,7 @@ export const useQuiz = () => {
     setCurrentQuestion(0);
     setScore(0);
     setAnswers(new Array(totalQuestions).fill(null));
-    setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+    setQuestionTimeLeft(questionTimeLimit);
     setQuizStartTime(Date.now());
     isProcessingRef.current = false;
 
@@ -336,7 +350,7 @@ export const useQuiz = () => {
     setCurrentQuestion(0);
     setScore(0);
     setAnswers(new Array(totalQuestions).fill(null));
-    setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+    setQuestionTimeLeft(questionTimeLimit);
     setQuizStartTime(null);
     setTotalDuration(0);
     setUserEmail(null);
@@ -390,6 +404,7 @@ export const useQuiz = () => {
     finalScore,
     questionTimeLeft,
     totalDuration,
+    timerEnabled,
     startQuiz,
     startQuizWithEmail,
     handleOptionClick,

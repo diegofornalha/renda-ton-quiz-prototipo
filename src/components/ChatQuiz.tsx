@@ -15,6 +15,7 @@ export const ChatQuiz = () => {
     isLoading,
     showEmailModal,
     questionTimeLeft,
+    timerEnabled,
     startQuiz,
     startQuizWithEmail,
     handleOptionClick,
@@ -41,6 +42,7 @@ export const ChatQuiz = () => {
             totalQuestions={totalQuestions}
             isPlaying={quizState === "playing"}
             timeLeft={questionTimeLeft}
+            timerEnabled={timerEnabled}
           />
 
           <ScrollArea className="flex-1 p-3 sm:p-4 md:p-6">

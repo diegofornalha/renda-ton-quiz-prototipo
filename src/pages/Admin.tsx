@@ -4,10 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock, Settings, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface QuizResult {
   id: string;
@@ -38,6 +42,11 @@ const Admin = () => {
   const [scoreGroups, setScoreGroups] = useState<ScoreGroup[]>([]);
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Timer settings
+  const [timerEnabled, setTimerEnabled] = useState(true);
+  const [timerSeconds, setTimerSeconds] = useState(180);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,6 +89,21 @@ const Admin = () => {
 
           setScoreGroups(groupsArray);
         }
+
+        // Fetch settings
+        const { data: settingsData } = await supabase
+          .from("quiz_settings")
+          .select("*");
+
+        if (settingsData) {
+          settingsData.forEach((setting) => {
+            if (setting.key === "timer_enabled") {
+              setTimerEnabled(setting.value === "true");
+            } else if (setting.key === "timer_seconds") {
+              setTimerSeconds(parseInt(setting.value) || 180);
+            }
+          });
+        }
       } catch (error) {
         console.error("Error fetching admin data:", error);
       } finally {
@@ -89,6 +113,28 @@ const Admin = () => {
 
     fetchData();
   }, []);
+
+  const saveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      await Promise.all([
+        supabase
+          .from("quiz_settings")
+          .update({ value: timerEnabled.toString(), updated_at: new Date().toISOString() })
+          .eq("key", "timer_enabled"),
+        supabase
+          .from("quiz_settings")
+          .update({ value: timerSeconds.toString(), updated_at: new Date().toISOString() })
+          .eq("key", "timer_seconds"),
+      ]);
+      toast.success("Configurações salvas com sucesso!");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error("Erro ao salvar configurações");
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const selectedResults = selectedScore !== null
     ? scoreGroups.find((g) => g.score === selectedScore)?.results || []
@@ -158,7 +204,52 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Score Groups and Details */}
+        {/* Timer Settings */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              <CardTitle>Configurações do Timer</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-end gap-6">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="timer-enabled"
+                  checked={timerEnabled}
+                  onCheckedChange={setTimerEnabled}
+                />
+                <Label htmlFor="timer-enabled" className="cursor-pointer">
+                  Timer ativo
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Label htmlFor="timer-seconds">Tempo por pergunta (segundos):</Label>
+                <Input
+                  id="timer-seconds"
+                  type="number"
+                  min={30}
+                  max={600}
+                  value={timerSeconds}
+                  onChange={(e) => setTimerSeconds(Math.max(30, Math.min(600, parseInt(e.target.value) || 180)))}
+                  className="w-24"
+                  disabled={!timerEnabled}
+                />
+                <span className="text-sm text-muted-foreground">
+                  ({Math.floor(timerSeconds / 60)}min {timerSeconds % 60}s)
+                </span>
+              </div>
+
+              <Button onClick={saveSettings} disabled={isSavingSettings} className="gap-2">
+                <Save className="w-4 h-4" />
+                {isSavingSettings ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Score Groups */}
           <Card>

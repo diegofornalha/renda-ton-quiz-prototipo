@@ -5,6 +5,7 @@ interface ChatHeaderProps {
   totalQuestions: number;
   isPlaying: boolean;
   timeLeft?: number;
+  timerEnabled?: boolean;
 }
 
 const formatTime = (seconds: number): string => {
@@ -17,10 +18,11 @@ export const ChatHeader = ({
   currentQuestion, 
   totalQuestions, 
   isPlaying,
-  timeLeft = 0
+  timeLeft = 0,
+  timerEnabled = true
 }: ChatHeaderProps) => {
-  const isLowTime = timeLeft <= 30;
-  const isCriticalTime = timeLeft <= 10;
+  const isLowTime = timerEnabled && timeLeft <= 30;
+  const isCriticalTime = timerEnabled && timeLeft <= 10;
 
   return (
     <div className="bg-primary/10 px-4 py-3 md:px-6 md:py-4 border-b border-border">
@@ -39,7 +41,7 @@ export const ChatHeader = ({
           </div>
         </div>
         
-        {isPlaying && (
+        {isPlaying && timerEnabled && (
           <div 
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm md:text-base font-semibold transition-colors ${
               isCriticalTime 

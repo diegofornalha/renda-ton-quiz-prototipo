@@ -287,7 +287,7 @@ const Admin = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total de Perguntas
+                Perguntas Geradas por IA
               </CardTitle>
               <HelpCircle className="w-5 h-5 text-primary" />
             </CardHeader>

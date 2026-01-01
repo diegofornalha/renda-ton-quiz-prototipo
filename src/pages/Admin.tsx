@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock, Settings, Save } from "lucide-react";
+import { ArrowLeft, Users, HelpCircle, Trophy, Calendar, Mail, Clock, Settings, Save, Lock, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -47,6 +47,52 @@ const Admin = () => {
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [timerSeconds, setTimerSeconds] = useState(180);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Check session storage on mount
+  useEffect(() => {
+    const adminAuth = sessionStorage.getItem("admin_authenticated");
+    if (adminAuth === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAuthenticating(true);
+    setAuthError("");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-admin", {
+        body: { password },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        sessionStorage.setItem("admin_authenticated", "true");
+        setIsAuthenticated(true);
+        setPassword("");
+      } else {
+        setAuthError(data.error || "Senha incorreta");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+      setAuthError("Erro ao verificar senha");
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin_authenticated");
+    setIsAuthenticated(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,22 +186,77 @@ const Admin = () => {
     ? scoreGroups.find((g) => g.score === selectedScore)?.results || []
     : [];
 
+  // Login screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+              <Lock className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle>Acesso Administrativo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Digite a senha de admin"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isAuthenticating}
+                  autoFocus
+                />
+              </div>
+              {authError && (
+                <p className="text-sm text-destructive">{authError}</p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Voltar
+                </Button>
+                <Button type="submit" disabled={isAuthenticating} className="flex-1">
+                  {isAuthenticating ? "Verificando..." : "Entrar"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-hero p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+              className="shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              Painel Administrativo
+            </h1>
+          </div>
+          <Button variant="outline" onClick={handleLogout} className="gap-2">
+            <LogOut className="w-4 h-4" />
+            Sair
           </Button>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            Painel Administrativo
-          </h1>
         </div>
 
         {/* Stats Cards */}

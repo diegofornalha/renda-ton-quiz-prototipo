@@ -5,123 +5,123 @@ export type { QuizQuestion, QuizLevel };
 export const quizQuestions: QuizQuestion[] = [
   {
     id: 1,
-    question: "Qual é o principal benefício do programa Renda Extra Ton?",
+    question: "Qual é a idade mínima para participar do programa Renda Extra?",
     options: [
-      "Desconto em máquinas de cartão",
-      "Ganhar comissões indicando novos clientes",
-      "Isenção de taxas por 1 ano",
-      "Acesso a um cartão de crédito exclusivo"
+      "16 anos",
+      "18 anos",
+      "21 anos",
+      "25 anos"
     ],
     correctAnswer: 1,
-    explanation: "O programa Renda Extra Ton permite que você ganhe comissões indicando novos clientes para utilizar as soluções Ton. Quanto mais indicações, maior sua renda!"
+    explanation: "Conforme item 3.1 do Regulamento Renda Extra, pode participar qualquer pessoa física capaz, na forma da legislação civil, com idade igual ou superior a 18 (dezoito) anos."
   },
   {
     id: 2,
-    question: "Quantas indicações são necessárias para atingir o nível Especialista I?",
+    question: "Quando ocorre o pagamento da recompensa no Renda Extra?",
     options: [
-      "5 indicações",
-      "10 indicações",
-      "15 indicações",
-      "20 indicações"
+      "No mesmo dia da validação da indicação",
+      "Até o dia 5 do mês subsequente",
+      "Até o dia 10 do mês subsequente à indicação",
+      "Até o dia 15 do mês subsequente"
     ],
-    correctAnswer: 1,
-    explanation: "Para alcançar o nível Especialista I, você precisa realizar 10 indicações válidas. Continue crescendo para desbloquear novos níveis!"
+    correctAnswer: 2,
+    explanation: "Conforme item 5.5 do Regulamento, o pagamento ocorrerá até o dia 10 (dez) do mês subsequente à indicação, desde que a validação pelo Pagar.me ocorra no mesmo mês da indicação."
   },
   {
     id: 3,
-    question: "Qual das opções NÃO é uma forma de receber os ganhos do Renda Extra?",
+    question: "Qual é o número MÍNIMO de indicações válidas necessárias para participar do Renda Ton?",
     options: [
-      "Transferência para conta bancária",
-      "Crédito no app Ton",
-      "PIX",
-      "Cheque nominal"
+      "1 indicação válida por mês",
+      "3 indicações válidas por mês",
+      "5 indicações válidas por mês",
+      "10 indicações válidas por mês"
     ],
-    correctAnswer: 3,
-    explanation: "O Renda Extra Ton permite recebimento via transferência bancária, crédito no app ou PIX. Cheques não são uma opção de pagamento disponível no programa."
+    correctAnswer: 1,
+    explanation: "Conforme item 3.1 do Regulamento Renda Ton, o Usuário participante do Renda Extra que realizar, no mínimo, 3 (três) indicações válidas no período de um mês poderá, a critério exclusivo do Pagar.me, participar do Renda Ton."
   },
   {
     id: 4,
-    question: "O que acontece quando uma indicação sua realiza a primeira venda?",
+    question: "No programa 'Indique um Parceiro', por quanto tempo o Usuário recebe comissão sobre o desempenho do Parceiro Indicado?",
     options: [
-      "Você ganha pontos de fidelidade",
-      "Você recebe uma bonificação",
-      "Nada acontece inicialmente",
-      "Você perde a comissão"
+      "90 dias",
+      "120 dias",
+      "180 dias",
+      "365 dias"
     ],
-    correctAnswer: 1,
-    explanation: "Quando sua indicação realiza a primeira venda, você recebe uma bonificação! Este é o momento em que sua indicação é validada e você começa a ganhar."
+    correctAnswer: 2,
+    explanation: "Conforme item 7.4 do Regulamento, o Usuário receberá uma porcentagem sobre o desempenho do Parceiro Indicado no Renda Extra, dentro do período de 180 (cento e oitenta) dias contados da finalização do cadastro do Parceiro Indicado."
   },
   {
     id: 5,
-    question: "Qual é o nível máximo do programa Renda Extra Ton?",
+    question: "O Usuário pode realizar autoindicação no Renda Extra?",
     options: [
-      "Especialista III",
-      "Mestre",
-      "Embaixador",
-      "Diamante"
+      "Sim, desde que use CPF/CNPJ diferente",
+      "Sim, mas apenas uma vez por mês",
+      "Não, o Usuário não poderá realizar autoindicação",
+      "Sim, se for para pessoa jurídica e ele for pessoa física"
     ],
     correctAnswer: 2,
-    explanation: "O nível Embaixador é o mais alto do programa! Nele você tem acesso a benefícios exclusivos e as maiores comissões por indicação."
+    explanation: "Conforme item 5.2.d do Regulamento Renda Extra, o Usuário não poderá realizar autoindicação. Esta é uma regra clara para evitar fraudes e garantir que as indicações sejam genuínas."
   },
   {
     id: 6,
-    question: "Para manter seu nível ativo, o que você precisa fazer mensalmente?",
+    question: "No programa Ton na Mão, em quanto tempo o Usuário deve realizar a entrega do Equipamento ao Novo Cliente após a conclusão da contratação?",
     options: [
-      "Fazer pelo menos 1 indicação",
-      "Manter suas indicações ativas",
-      "Pagar uma mensalidade",
-      "Realizar um treinamento"
+      "No mesmo dia",
+      "Até às 18:00 do dia útil seguinte",
+      "Em até 3 dias úteis",
+      "Em até 5 dias corridos"
     ],
     correctAnswer: 1,
-    explanation: "Para manter seu nível ativo, é importante que suas indicações continuem ativas e processando vendas regularmente."
+    explanation: "Conforme item 4.2 do Regulamento Ton na Mão, o Usuário deve realizar a entrega até as 18:00 (dezoito horas) do dia útil seguinte à conclusão da contratação, devendo também registrar no sistema Workfinity."
   },
   {
     id: 7,
-    question: "Qual material está disponível para ajudar nas suas indicações?",
+    question: "Qual é o valor da Comissão Adicional na Campanha ChaveTON para cada indicação válida com cadastro de Chave Pix Principal?",
     options: [
-      "Apenas folhetos impressos",
-      "Materiais digitais no app",
-      "Somente vídeos no YouTube",
-      "Manual físico enviado pelos correios"
+      "R$ 3,00",
+      "R$ 5,00",
+      "R$ 10,00",
+      "R$ 15,00"
     ],
     correctAnswer: 1,
-    explanation: "O app Ton disponibiliza materiais digitais como banners, vídeos e textos prontos para você compartilhar e fazer suas indicações de forma mais eficiente!"
+    explanation: "Conforme item 1.2 do Regulamento Campanha ChaveTON, a cada indicação bem-sucedida com cadastro de Chave Pix Principal, o Usuário terá direito a uma comissão adicional de R$ 5,00 (cinco reais)."
   },
   {
     id: 8,
-    question: "Quem pode participar do programa Renda Extra Ton?",
+    question: "Quantos dias o Novo Cliente tem para cadastrar a Chave Pix Principal após a aprovação da Conta Ton para que a indicação seja válida na Campanha ChaveTON?",
     options: [
-      "Apenas clientes com mais de 1 ano",
-      "Somente vendedores profissionais",
-      "Qualquer cliente Ton ativo",
-      "Apenas pessoas jurídicas"
+      "1 dia corrido",
+      "2 dias corridos",
+      "3 dias corridos",
+      "5 dias corridos"
     ],
     correctAnswer: 2,
-    explanation: "Qualquer cliente Ton ativo pode participar do programa Renda Extra! Basta ter uma conta ativa para começar a indicar e ganhar."
+    explanation: "Conforme item 3.1.III do Regulamento Campanha ChaveTON, o Novo Cliente deve cadastrar a Chave Pix Principal em até 3 (três) dias corridos contados a partir da data de aprovação da Conta Ton."
   },
   {
     id: 9,
-    question: "O que é necessário para uma indicação ser considerada válida?",
+    question: "No Programa Pronta Entrega, o que acontece se o Usuário não entregar o Equipamento ao Novo Cliente no prazo estabelecido?",
     options: [
-      "Apenas cadastro completo",
-      "Cadastro + ativação da máquina + primeira venda",
-      "Somente a compra da máquina",
-      "Indicação de 3 amigos em conjunto"
+      "Apenas recebe advertência por e-mail",
+      "Está sujeito a penalidades, incluindo proibição de compra de novos Equipamentos",
+      "Perde apenas a recompensa daquela indicação",
+      "Nada acontece, é apenas uma recomendação"
     ],
     correctAnswer: 1,
-    explanation: "Uma indicação só é validada quando o indicado completa o cadastro, ativa sua máquina e realiza a primeira venda. Assim garantimos que é uma indicação real!"
+    explanation: "Conforme item 4.2.1 do Regulamento Pronta Entrega, o Usuário estará sujeito a eventuais penalidades, incluindo, mas não se limitando à proibição de compra de novos Equipamentos por prazo determinado pelo TON."
   },
   {
     id: 10,
-    question: "Qual é a vantagem exclusiva do nível Embaixador?",
+    question: "Para obter o Selo Ton no programa Ponto Físico, qual é um dos requisitos obrigatórios?",
     options: [
-      "Taxa zero para sempre",
-      "Comissões recorrentes e suporte prioritário",
-      "Máquina grátis por mês",
-      "Viagem de premiação anual"
+      "Ter pelo menos 100 indicações por mês",
+      "Pagar uma taxa anual de certificação",
+      "O ponto físico deve ser exclusivo do Ton, sem produtos de concorrentes",
+      "Ter no mínimo 2 anos de participação no Renda Extra"
     ],
-    correctAnswer: 1,
-    explanation: "Embaixadores têm direito a comissões recorrentes sobre as vendas dos indicados e acesso a suporte prioritário, além de outras vantagens exclusivas!"
+    correctAnswer: 2,
+    explanation: "Conforme itens 2.3 e 2.6.g do Regulamento Ponto Ton, o Selo é disponibilizado apenas para pontos exclusivos do Ton, que não oferecem outro tipo de produto nem produtos ou maquininhas de concorrentes."
   }
 ];
 

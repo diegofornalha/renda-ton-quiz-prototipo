@@ -21,6 +21,7 @@ export const ChatQuiz = () => {
     handleOptionClick,
     restartQuiz,
     sendMessage,
+    closeEmailModal,
   } = useQuiz();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -78,6 +79,7 @@ export const ChatQuiz = () => {
       <EmailModal
         isOpen={showEmailModal}
         onSuccess={startQuizWithEmail}
+        onClose={closeEmailModal}
       />
     </div>
   );

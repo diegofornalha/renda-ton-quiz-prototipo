@@ -15,11 +15,13 @@ import { toast } from "sonner";
 interface EmailModalProps {
   isOpen: boolean;
   onSuccess: (email: string) => void;
+  onClose?: () => void;
 }
 
 export const EmailModal = ({
   isOpen,
   onSuccess,
+  onClose,
 }: EmailModalProps) => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,8 +48,8 @@ export const EmailModal = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose?.()}>
+      <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
           <DialogTitle>Antes de começar! 📧</DialogTitle>
           <DialogDescription>

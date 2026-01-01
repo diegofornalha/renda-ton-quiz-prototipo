@@ -571,7 +571,7 @@ export const useQuiz = () => {
   );
 
   const lastMessage = messages[messages.length - 1];
-  const showOptions = lastMessage?.type === "question" && quizState === "playing" && !isProcessingRef.current;
+  const showOptions = lastMessage?.type === "question" && quizState === "playing" && !isProcessingRef.current && !lastMessage?.isTyping && !lastMessage?.isStreaming;
   const showWelcomeOptions = lastMessage?.type === "welcome" && lastMessage?.options && quizState === "idle" && !awaitingEmail && !lastMessage.isTyping && !lastMessage.isStreaming;
 
   return {

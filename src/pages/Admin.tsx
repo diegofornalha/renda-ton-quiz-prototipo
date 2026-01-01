@@ -127,6 +127,33 @@ const Admin = () => {
     }
   };
 
+  const handleDeleteResult = async (resultId: string) => {
+    try {
+      const { error } = await supabase
+        .from("quiz_results")
+        .delete()
+        .eq("id", resultId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setResults((prev) => prev.filter((r) => r.id !== resultId));
+      setScoreGroups((prev) =>
+        prev
+          .map((group) => ({
+            ...group,
+            results: group.results.filter((r) => r.id !== resultId),
+            count: group.results.filter((r) => r.id !== resultId).length,
+          }))
+          .filter((group) => group.count > 0)
+      );
+
+      toast.success("Resultado excluído");
+    } catch {
+      toast.error("Erro ao excluir resultado");
+    }
+  };
+
   const selectedResults = selectedScore !== null
     ? scoreGroups.find((g) => g.score === selectedScore)?.results || []
     : [];
@@ -355,9 +382,17 @@ const Admin = () => {
                                 </div>
                               </div>
                             </div>
-                            <Badge className="shrink-0">
-                              {result.score}/{result.total_questions}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className="shrink-0">
+                                {result.score}/{result.total_questions}
+                              </Badge>
+                              <button
+                                onClick={() => handleDeleteResult(result.id)}
+                                className="text-xs text-red-500 hover:text-red-700 font-medium"
+                              >
+                                excluir
+                              </button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
